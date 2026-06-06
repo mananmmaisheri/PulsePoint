@@ -14,7 +14,8 @@ import {
   Grid,
   Sparkles,
   Cpu,
-  BrainCircuit
+  BrainCircuit,
+  Sliders
 } from "lucide-react";
 
 // Import live functional sub-systems
@@ -23,6 +24,7 @@ import MedicalRecordsVault from "./MedicalRecordsVault";
 import EmergencySOS from "./EmergencySOS";
 import HospitalLocator from "./HospitalLocator";
 import HealthAvatar3D from "./HealthAvatar3D";
+import HealthOnboarding from "./HealthOnboarding";
 
 interface FeatureCard {
   id: string;
@@ -140,6 +142,21 @@ export default function FeaturesHub() {
       techStack: ["3D Humanoid Model", "Biometrics Scale", "Directives Engine"],
       status: "Hologram Syncing",
       telemetryType: "avatar"
+    },
+    {
+      id: "risk-predictor",
+      title: "Chronic Risk Predictor",
+      category: "PREVENTATIVE EPIDEMIOLOGY",
+      shortDesc: "Our interactive 6-section clinical questionnaire and blood report scanner mapping direct risk scores.",
+      longDesc: "Performs multi-vector assessment (lifestyle metrics, symptom indicators, genetics, and lab blood telemetry) to formulate predictive scores for Diabetes, Coronary and Hypertensive states.",
+      icon: <Sliders className="h-5 w-5" />,
+      colorClass: "border-violet-500/30 text-violet-400 hover:border-violet-500/60",
+      activeColorClass: "border-violet-500 bg-[#0e0a29]/80 shadow-violet-500/20 ring-violet-500/25",
+      glowColor: "rgba(139, 92, 246, 0.2)",
+      accentHex: "#8b5cf6",
+      techStack: ["ML Risk Models", "Biomarker Extractors", "Onboarding Flow"],
+      status: "Assessment Ready",
+      telemetryType: "tam"
     }
   ];
 
@@ -204,12 +221,12 @@ export default function FeaturesHub() {
               </div>
             </div>
 
-            {/* Bento Interactive Grid for exactly 5 cards */}
+            {/* Bento Interactive Grid for exactly 6 cards */}
             <motion.div
               variants={staggerContainer}
               initial="hidden"
               animate="visible"
-              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
             >
               {cards.map((card) => (
                 <motion.button
@@ -419,6 +436,7 @@ export default function FeaturesHub() {
                   {activeFeatureId === "sos" && <EmergencySOS />}
                   {activeFeatureId === "locator" && <HospitalLocator />}
                   {activeFeatureId === "avatar" && <HealthAvatar3D />}
+                  {activeFeatureId === "risk-predictor" && <HealthOnboarding />}
                 </motion.div>
               </AnimatePresence>
             </div>
