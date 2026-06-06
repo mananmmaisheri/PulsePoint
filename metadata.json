@@ -1,0 +1,9 @@
+{
+  "name": "PulsePoint",
+  "description": "An AI-powered healthcare assistant and emergency response platform for instant health guidance and emergency response.",
+  "requestFramePermissions": [
+    "geolocation",
+    "microphone"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
