@@ -46,6 +46,7 @@ export interface MedicalRecord {
   summary: string;
   rawText?: string;
   category: "Prescription" | "Lab Report" | "Discharge Summary" | "General Note";
+  fileData?: string;
 }
 
 export interface ChatMessage {

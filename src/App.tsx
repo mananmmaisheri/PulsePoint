@@ -10,9 +10,34 @@ import AISmartAssistant from "./components/AISmartAssistant";
 import FeaturesHub from "./components/FeaturesHub";
 import HomepageScrollSections from "./components/HomepageScrollSections";
 import Footer from "./components/Footer";
+import UserProfile from "./components/UserProfile";
+
+interface AppUser {
+  email: string | null;
+  name: string;
+  isGuest: boolean;
+  birthdate?: string;
+  bloodType?: string;
+  allergies?: string;
+  conditions?: string;
+  joinedDate?: string;
+}
 
 export default function App() {
-  // Navigation tabs routing state: "home" | "pulsepoint" | "features"
+  // Authentication states
+  const [user, setUser] = useState<AppUser | null>(() => {
+    const saved = localStorage.getItem("pulsepoint_user");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  // Navigation tabs routing state: "home" | "pulsepoint" | "features" | "profile"
   const [currentTab, setTabState] = useState<string>("home");
 
   // Wrapping setTab with startTransition to handle routing transitions fluidly
@@ -48,7 +73,7 @@ export default function App() {
           {/* Section 1: Top Hero Landing Section (h-screen viewport containment) */}
           <div className="relative min-h-screen flex flex-col overflow-hidden shrink-0 z-10">
             {/* Top Navbar */}
-            <Navbar currentTab={currentTab} setTab={setTab} />
+            <Navbar currentTab={currentTab} setTab={setTab} user={user} />
 
             {/* Vertically Centered Hero elements above video - relative z-10 block */}
             <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 max-w-7xl mx-auto w-full">
@@ -116,7 +141,7 @@ export default function App() {
           <BackgroundVideo url="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260328_065045_c44942da-53c6-4804-b734-f9e07fc22e08.mp4" />
 
           {/* Navbar wrapper */}
-          <Navbar currentTab={currentTab} setTab={setTab} />
+          <Navbar currentTab={currentTab} setTab={setTab} user={user} />
 
           {/* Chat Assistant embedded inside beautiful transparent frosted layout card */}
           <div className="relative z-10 flex-1 flex flex-col justify-center py-4 px-4 md:px-8 max-w-7xl mx-auto w-full h-[calc(100vh-80px)] overflow-hidden">
@@ -148,7 +173,7 @@ export default function App() {
           <BackgroundVideo url="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260328_065045_c44942da-53c6-4804-b734-f9e07fc22e08.mp4" />
 
           {/* Master Dashboard Navbar */}
-          <Navbar currentTab={currentTab} setTab={setTab} />
+          <Navbar currentTab={currentTab} setTab={setTab} user={user} />
 
           {/* Primary View content mounting the catalog layout of medical modules */}
           <div className="relative z-20 flex-1 flex flex-col">
@@ -165,6 +190,28 @@ export default function App() {
               </motion.div>
             </AnimatePresence>
           </div>
+        </div>
+      )}
+
+      {currentTab === "profile" && (
+        /* ==================== 4. USER HEALTH VAULT & EHR PROFILE ==================== */
+        <div className="min-h-screen flex flex-col bg-background relative overflow-y-auto">
+          {/* Ambient cosmic backdrop layout */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[984px] h-[527px] opacity-90 bg-gray-950 blur-[82px] rounded-full"></div>
+            <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-emerald-900/10 blur-[120px] rounded-full"></div>
+            <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-violet-900/10 blur-[120px] rounded-full"></div>
+          </div>
+
+          <BackgroundVideo url="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260328_065045_c44942da-53c6-4804-b734-f9e07fc22e08.mp4" />
+
+          <Navbar currentTab={currentTab} setTab={setTab} user={user} />
+
+          <div className="relative z-10 flex-1 flex flex-col">
+            <UserProfile user={user} onAuthChange={setUser} setTab={setTab} />
+          </div>
+          
+          <Footer setTab={setTab} />
         </div>
       )}
     </div>

@@ -98,6 +98,7 @@ export default function AISmartAssistant() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(true);
+  const [chatQuotaExceeded, setChatQuotaExceeded] = useState(false);
   const [activeTab, setActiveTab2] = useState<"diet" | "remedies">("remedies");
   const [selectedDietKey, setSelectedDietKey] = useState<"veg" | "non_veg" | "vegan" | "keto">("veg");
   const [sosStatus, setSosStatus] = useState<"idle" | "triggered">("idle");
@@ -439,6 +440,9 @@ export default function AISmartAssistant() {
       }
 
       const data = await response.json();
+      if (data.quotaExceededFallback) {
+        setChatQuotaExceeded(true);
+      }
       
       const aiMsg: ChatMessage = {
         id: `chat-${Date.now() + 1}`,
@@ -449,6 +453,7 @@ export default function AISmartAssistant() {
 
       setMessages((prev) => [...prev, aiMsg]);
     } catch (error: any) {
+      setChatQuotaExceeded(true);
       // Offline fallback state with triage mock data matching symptom indicators
       const isEmergency = /chest|heart(?!burn)|breath|chok|sos|bleed|unconscious|stroke|paraly/i.test(text);
       const isYellow = /pressure|pain|cough|migraine|fever|infection|chronic|stomach|diabetes/i.test(text);
@@ -620,6 +625,23 @@ export default function AISmartAssistant() {
           </button>
         </div>
       </div>
+
+      {chatQuotaExceeded && (
+        <div className="p-3.5 px-5 bg-amber-950/20 border border-amber-500/30 rounded-2xl flex items-center justify-between gap-4 text-xs text-amber-300 transition-all animate-fade-in" id="chat-quota-warning">
+          <div className="flex items-center gap-2.5 text-left">
+            <AlertTriangle className="h-4.5 w-4.5 text-amber-400 shrink-0" />
+            <span className="text-zinc-300 leading-normal">
+              <strong>Clinical Offline Model Engaged:</strong> Planetary AI limit coordinates exceeded. Instant sandboxed clinical fallback is active to safeguard all physical triage, Indian home remedies, and care guides without delay.
+            </span>
+          </div>
+          <button 
+            onClick={() => setChatQuotaExceeded(false)}
+            className="text-[10px] font-mono hover:text-white bg-amber-900/30 hover:bg-amber-800/50 px-2.5 py-1 rounded-lg border border-amber-500/30 shrink-0 cursor-pointer"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* 2. Main Workspace split layout */}
       <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0 lg:overflow-hidden w-full">

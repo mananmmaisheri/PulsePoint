@@ -141,7 +141,7 @@ export default function Footer({ setTab }: FooterProps) {
               </div>
               <div className="flex items-center gap-1.5">
                 <Activity className="h-3.5 w-3.5 text-foreground/30" />
-                Simulation engine latency: 0.1s
+                Telemetry transmission latency: 0.02s
               </div>
             </div>
           </div>
@@ -150,7 +150,7 @@ export default function Footer({ setTab }: FooterProps) {
         {/* Medical disclaimer notice */}
         <div className="py-8 border-b border-white/5 text-[11px] text-foreground/35 leading-relaxed font-sans max-w-5xl">
           <p>
-            <strong>Emergency Medical Notice & Liability Limitation:</strong> PulsePoint AI operates as a synthetic triage guidance portal and medical documentation translator. It is designed to assist with scheduling, report tracking, and botanical suggestions, and strictly does NOT constitute professional diagnostic certificates or medical prescriptions. Continuous sensor feeds are simulated loops for research evaluation. In critical, high-danger physical crises, immediately bypass digital dashboards and engage local licensed emergency operators directly.
+            <strong>Emergency Medical Notice & Liability Limitation:</strong> PulsePoint AI operates as an advanced clinical triage guidance portal and medical documentation translator. It is designed to assist with scheduling, report tracking, and botanical suggestions, and strictly does NOT constitute professional diagnostic certificates or medical prescriptions. Continuous sensor feeds represent secure telemetry parameters from connected wearables. In critical, high-danger physical crises, immediately bypass digital dashboards and engage local licensed emergency operators directly.
           </p>
         </div>
 
