@@ -130,7 +130,6 @@ export default function UserProfile({ user, onAuthChange, setTab }: UserProfileP
 
       localStorage.setItem("pulsepoint_user", JSON.stringify(provisionedUser));
       onAuthChange(provisionedUser);
-      setTab("pulsepoint");
       setIsSubmitting(false);
       playBeep(1100, 0.15);
     }, 900);
@@ -157,7 +156,6 @@ export default function UserProfile({ user, onAuthChange, setTab }: UserProfileP
       
       localStorage.setItem("pulsepoint_user", JSON.stringify(guestUser));
       onAuthChange(guestUser);
-      setTab("pulsepoint");
       setIsSubmitting(false);
       playBeep(1200, 0.12);
     }, 400);
