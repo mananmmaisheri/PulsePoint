@@ -105,7 +105,7 @@ export default function App() {
 
                 {/* CTA button: "Schedule a Consult" - leads immediately to the specialized AI assistant */}
                 <button
-                  onClick={() => setTab("pulsepoint")}
+                  onClick={() => setTab(user ? "pulsepoint" : "profile")}
                   className="liquid-glass text-white font-semibold hover:bg-white/10 hover:shadow-violet-500/20 px-8 py-5 mt-10 rounded-full cursor-pointer select-none active:scale-98 transition-all tracking-wide text-sm flex items-center gap-3 shadow-2xl border border-white/20 animate-bounce"
                   style={{ animationDuration: '3s' }}
                 >

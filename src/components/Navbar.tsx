@@ -93,8 +93,8 @@ export default function Navbar({ currentTab, setTab, user }: NavbarProps) {
         <div className="flex items-center gap-2.5">
           {/* Launch CTA on desktop, hidden or condensed on small screens */}
           <button
-            onClick={() => handleTabSelect(currentTab === "home" ? "pulsepoint" : "home")}
-            className="hidden sm:inline-flex items-center justify-center liquid-glass text-center text-white text-xs font-semibold hover:bg-white/10 border border-white/15 h-9 px-4.5 rounded-full transition-all cursor-pointer shadow-lg hover:shadow-violet-500/10 active:scale-98"
+            onClick={() => handleTabSelect(currentTab === "home" ? (user ? "pulsepoint" : "profile") : "home")}
+            className="hidden sm:inline-flex items-center justify-center liquid-glass text-center text-white text-xs font-semibold hover:bg-white/10 border border-white/15 h-10 px-5 rounded-full transition-all cursor-pointer shadow-lg hover:shadow-violet-500/10 active:scale-98 leading-none shrink-0"
           >
             {currentTab === "home" ? "Launch Clinical AI" : "Back to Landing"}
           </button>
@@ -198,7 +198,7 @@ export default function Navbar({ currentTab, setTab, user }: NavbarProps) {
           {/* Mobile dedicated extra launch trigger */}
           <div className="pt-2.5 border-t border-white/5">
             <button
-              onClick={() => handleTabSelect(currentTab === "home" ? "pulsepoint" : "home")}
+              onClick={() => handleTabSelect(currentTab === "home" ? (user ? "pulsepoint" : "profile") : "home")}
               className="w-full py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-650 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-xs tracking-wider uppercase transition-all shadow-xl text-center active:scale-98"
             >
               {currentTab === "home" ? "Launch Clinical AI" : "Back to Landing"}

@@ -101,8 +101,8 @@ export default function EmergencySOS() {
   useEffect(() => {
     let timer: any;
     if (sosState === "countdown" && countdown > 0) {
-      // Play brief high-pitch beep for countdown warning
-      playBeep(980, 0.15);
+      // Play premium analog tick countdown sound
+      playTickSound();
       timer = setTimeout(() => {
         setCountdown((p) => p - 1);
       }, 1000);
@@ -174,6 +174,34 @@ export default function EmergencySOS() {
       osc.stop(audioCtx.currentTime + duration);
     } catch (e) {
       console.warn("Audio Context beep initialization blocked:", e);
+    }
+  };
+
+  // Pre-dispatch ticking sound resembling a digital countdown timer clock
+  const playTickSound = () => {
+    if (isMuted) return;
+    try {
+      const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!Ctx) return;
+      const audioCtx = new Ctx();
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      // Rapidly falling sine frequency to simulate a realistic mechanical tick-tock clip
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.08);
+
+      gainNode.gain.setValueAtTime(0.18, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.08);
+    } catch (e) {
+      console.warn("Audio Context tick initialization failed:", e);
     }
   };
 
@@ -260,7 +288,7 @@ export default function EmergencySOS() {
   const initiateSOS = () => {
     setSosState("countdown");
     setCountdown(5);
-    startSiren(); // Direct immediate siren audio play
+    // Silent start for siren - siren now only triggers after countdown completes
   };
 
   const cancelSOS = () => {
