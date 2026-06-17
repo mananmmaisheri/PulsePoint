@@ -23,7 +23,6 @@ import HealthDashboard from "./HealthDashboard";
 import MedicalRecordsVault from "./MedicalRecordsVault";
 import EmergencySOS from "./EmergencySOS";
 import HospitalLocator from "./HospitalLocator";
-import HealthAvatar3D from "./HealthAvatar3D";
 import HealthOnboarding from "./HealthOnboarding";
 
 interface FeatureCard {
@@ -127,21 +126,6 @@ export default function FeaturesHub() {
       techStack: ["Maps GIS APIs", "Clinics Geocoder", "AI Search Grounding"],
       status: "Satellite Sync",
       telemetryType: "radar"
-    },
-    {
-      id: "avatar",
-      title: "Create a 3D Avatar",
-      category: "SOMATIC PROJECTION",
-      shortDesc: "Generate an interactive, height/weight-adjusted 3D biosensor hologram.",
-      longDesc: "Renders a virtual cybernetic 3D organ representation based on biometrics with strict reviews, custom activity directives, and physical risk limitations.",
-      icon: <User className="h-5 w-5" />,
-      colorClass: "border-emerald-500/30 text-emerald-400 hover:border-emerald-500/60",
-      activeColorClass: "border-emerald-500 bg-[#0e0a29]/80 shadow-emerald-500/20 ring-emerald-500/25",
-      glowColor: "rgba(16, 185, 129, 0.2)",
-      accentHex: "#10b981",
-      techStack: ["3D Humanoid Model", "Biometrics Scale", "Directives Engine"],
-      status: "Hologram Syncing",
-      telemetryType: "avatar"
     },
     {
       id: "risk-predictor",
@@ -435,7 +419,6 @@ export default function FeaturesHub() {
                   {activeFeatureId === "records-vault" && <MedicalRecordsVault />}
                   {activeFeatureId === "sos" && <EmergencySOS />}
                   {activeFeatureId === "locator" && <HospitalLocator />}
-                  {activeFeatureId === "avatar" && <HealthAvatar3D />}
                   {activeFeatureId === "risk-predictor" && <HealthOnboarding />}
                 </motion.div>
               </AnimatePresence>

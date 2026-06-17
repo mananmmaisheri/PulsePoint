@@ -646,280 +646,300 @@ export default function AISmartAssistant() {
       {/* 2. Main Workspace split layout */}
       <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0 lg:overflow-hidden w-full">
         
-        {/* Left Side: Standard Chat box Column */}
-        <div className="flex-1 flex flex-col bg-[#070414]/90 border border-white/5 rounded-3xl overflow-hidden shadow-2xl relative min-h-0 h-full">
-        
-        {/* If chat has only initial model message, show welcome splash + presets */}
-        {messages.length === 0 && (
-          <div className="p-6 md:p-8 flex-1 flex flex-col items-center justify-center text-center space-y-6 max-w-2xl mx-auto my-auto overflow-y-auto">
-            <div className="relative">
-              <div className="absolute inset-0 bg-violet-500/20 rounded-full blur-2xl animate-pulse" />
-              <div className="relative h-14 w-14 rounded-2xl bg-slate-900 flex items-center justify-center border border-white/10 shadow-xl overflow-hidden shrink-0">
-                <img 
-                  src="https://lh3.googleusercontent.com/d/1BFhwv5CYYqqOtHIMy-YIZhOoHHVJSCLS" 
-                  alt="PulsePoint AI Logo" 
-                  className="h-12 w-12 object-contain"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-            </div>
+        {/* Left Side: Standard Chat box Column with animated PulsePoint moving border light */}
+        <div className="flex-1 flex flex-col moving-border-container p-[1.5px] rounded-3xl shadow-2xl relative min-h-0 h-full breathing-glow-box">
+          <div className="flex-1 flex flex-col bg-[#070414] rounded-[22.5px] overflow-hidden relative min-h-0 h-full">
+         
+         {/* If chat has only initial model message, show welcome splash + presets */}
+         {messages.length === 0 && (
+           <div className="p-6 md:p-8 flex-1 flex flex-col items-center justify-center text-center space-y-6 max-w-2xl mx-auto my-auto overflow-y-auto w-full">
+             <div className="relative">
+               <div className="absolute inset-x-0 top-0 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-500 rounded-full blur-3xl opacity-20 animate-pulse h-16 w-16 mx-auto" />
+               <div className="relative h-16 w-16 mx-auto rounded-2xl bg-zinc-950 flex items-center justify-center border border-white/10 shadow-2xl overflow-hidden shrink-0">
+                 <img 
+                   src="https://lh3.googleusercontent.com/d/1BFhwv5CYYqqOtHIMy-YIZhOoHHVJSCLS" 
+                   alt="PulsePoint AI Logo" 
+                   className="h-14 w-14 object-contain"
+                   referrerPolicy="no-referrer"
+                 />
+               </div>
+             </div>
 
-            <div className="space-y-2">
-              <h2 className="text-xl font-display font-medium text-[#f2f1ef] tracking-tight">
-                Indian Clinical & Wellness Portal
-              </h2>
-              <p className="text-xs text-foreground/60 leading-relaxed font-sans">
-                Describe any symptoms, voice queries, or upload clinical reports. PulsePoint AI instantly triages physical signs, schedules rescue plans, and charts traditional diets (Khichdi, Shorba), botanical remedies, and medicine suggestions.
-              </p>
-            </div>
+             <div className="space-y-3">
+               <h2 className="text-3xl md:text-4xl font-display font-medium tracking-tight text-white">
+                 Hello, <span className="bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent font-bold">Manan</span>
+               </h2>
+               <h3 className="text-lg md:text-xl font-sans font-medium text-zinc-400 leading-normal max-w-lg mx-auto">
+                 How can PulsePoint assist your wellness journey today?
+               </h3>
+             </div>
 
-            {/* Quick Presets Section */}
-            <div className="w-full space-y-3 pt-2">
-              <h3 className="text-[10px] font-mono tracking-widest font-black text-violet-300 uppercase">
-                🩺 Click to Ask / Floating Suggestions
-              </h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-left">
-                {SUGGESTIONS.map((preset, pIdx) => (
-                  <button
-                    key={pIdx}
-                    onClick={() => handleSend(preset.prompt)}
-                    disabled={loading}
-                    className="p-3.5 bg-white/[0.01] hover:bg-violet-950/20 border border-white/5 hover:border-violet-500/20 rounded-2xl transition-all cursor-pointer text-left flex flex-col justify-between group active:scale-[0.98]"
-                  >
-                    <span className="text-xs font-bold text-violet-200 group-hover:text-violet-300 transition-colors flex items-center gap-1.5">
-                      <Sparkles className="h-3 w-3 text-amber-400" />
-                      {preset.label}
-                    </span>
-                    <p className="text-[10px] text-zinc-500 mt-1 line-clamp-2 leading-relaxed">
-                      {preset.prompt}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+             {/* Quick Presets Section */}
+             <div className="w-full space-y-4 pt-4">
+               <h4 className="text-[10px] font-mono tracking-widest font-black text-violet-400 uppercase flex items-center justify-center gap-1.5">
+                 <Sparkles className="h-3.5 w-3.5 text-pink-400" />
+                 Somatic Triage Floating Suggestions
+               </h4>
+               
+               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-left">
+                 {SUGGESTIONS.map((preset, pIdx) => (
+                   <button
+                     key={pIdx}
+                     onClick={() => handleSend(preset.prompt)}
+                     disabled={loading}
+                     className="p-3 bg-black/60 hover:bg-gradient-to-br hover:from-purple-950/20 hover:to-zinc-950 border border-white/5 hover:border-violet-500/30 rounded-xl transition-all cursor-pointer text-left flex flex-col justify-between group active:scale-[0.98] shadow-md h-[105px]"
+                   >
+                     <span className="text-[11px] font-bold text-zinc-100 group-hover:text-purple-300 transition-colors flex items-center gap-1">
+                       <Sparkles className="h-3 w-3 text-pink-400" />
+                       {preset.label}
+                     </span>
+                     <p className="text-[10px] text-zinc-500 group-hover:text-zinc-400 mt-1 line-clamp-3 leading-relaxed transition-colors">
+                       {preset.prompt}
+                     </p>
+                   </button>
+                 ))}
+               </div>
+             </div>
+           </div>
+         )}
 
-        {/* Dynamic Speech Waveform overlay when listening */}
-        <AnimatePresence>
-          {isListening && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-x-0 bottom-16 top-0 bg-slate-950/90 z-20 flex flex-col items-center justify-center p-6 text-center backdrop-blur-sm"
-            >
-              <div className="flex gap-1.5 items-center justify-center h-16 mb-4">
-                {[...Array(6)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    animate={{
-                      height: [16, 48, 16],
-                    }}
-                    transition={{
-                      repeat: Infinity,
-                      duration: 0.8,
-                      delay: i * 0.12,
-                    }}
-                    className="w-1.5 bg-violet-500 rounded-full"
-                  />
-                ))}
-              </div>
-              <h4 className="text-sm font-mono font-bold text-violet-300 tracking-wider animate-pulse mb-1">
-                LISTENING COGNITIVE SPEECH...
-              </h4>
-              <p className="text-xs text-foreground/45 max-w-sm">
-                Speak your physical symptoms clearly. PulsePoint will transcribe and map your somatic parameters instantly.
-              </p>
-              <button
-                onClick={toggleListening}
-                className="mt-6 px-4 py-2 rounded-full border border-rose-500/30 bg-rose-950/20 hover:bg-rose-950/40 text-xs text-rose-300 transition-all font-mono uppercase font-black cursor-pointer"
-              >
-                Stop & Cancel
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+         {/* Dynamic Speech Waveform overlay when listening */}
+         <AnimatePresence>
+           {isListening && (
+             <motion.div
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               exit={{ opacity: 0 }}
+               className="absolute inset-x-0 bottom-16 top-0 bg-[#070414]/95 z-20 flex flex-col items-center justify-center p-6 text-center backdrop-blur-sm"
+             >
+               <div className="flex gap-1.5 items-center justify-center h-16 mb-4">
+                 {[...Array(6)].map((_, i) => (
+                   <motion.div
+                     key={i}
+                     animate={{
+                       height: [16, 48, 16],
+                     }}
+                     transition={{
+                       repeat: Infinity,
+                       duration: 0.8,
+                       delay: i * 0.12,
+                     }}
+                     className="w-1.5 bg-gradient-to-b from-pink-500 to-purple-500 rounded-full"
+                   />
+                 ))}
+               </div>
+               <h4 className="text-sm font-mono font-bold text-violet-300 tracking-wider animate-pulse mb-1">
+                 LISTENING COGNITIVE SPEECH...
+               </h4>
+               <p className="text-xs text-foreground/45 max-w-sm">
+                 Speak your physical symptoms clearly. PulsePoint will transcribe and map your somatic parameters instantly.
+               </p>
+               <button
+                 onClick={toggleListening}
+                 className="mt-6 px-4 py-2 rounded-full border border-rose-500/30 bg-rose-950/20 hover:bg-rose-950/40 text-xs text-rose-300 transition-all font-mono uppercase font-black cursor-pointer"
+               >
+                 Stop & Cancel
+               </button>
+             </motion.div>
+           )}
+         </AnimatePresence>
 
-        {/* Thread conversational scroll content */}
-        {messages.length > 0 && (
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5">
-            {messages.map((m) => {
-              const isUser = m.role === "user";
-              const text = getMessageText(m.content);
-              const customMsg = m as ChatMessage & { mediaUrl?: string; mediaName?: string; mediaType?: string };
-              
-              return (
-                <div
-                  key={m.id}
-                  className={`flex gap-3 max-w-[85%] ${isUser ? "ml-auto flex-row-reverse" : "mr-auto"}`}
-                >
-                  <div
-                    className={`h-8 w-8 rounded-full shrink-0 flex items-center justify-center border font-mono font-bold text-xs ${
-                      isUser
-                        ? "bg-violet-600/20 border-violet-500/40 text-violet-300"
-                        : "bg-rose-600/20 border-rose-500/40 text-rose-300"
-                    }`}
-                  >
-                    {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-                  </div>
+         {/* Thread conversational scroll content */}
+         {messages.length > 0 && (
+           <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5">
+             {messages.map((m) => {
+               const isUser = m.role === "user";
+               const text = getMessageText(m.content);
+               const customMsg = m as ChatMessage & { mediaUrl?: string; mediaName?: string; mediaType?: string };
+               
+               return (
+                 <div
+                   key={m.id}
+                   className={`flex gap-3 max-w-[85%] ${isUser ? "ml-auto flex-row-reverse" : "mr-auto"}`}
+                 >
+                   <div
+                     className={`h-8 w-8 rounded-full shrink-0 flex items-center justify-center border font-mono font-bold text-xs ${
+                       isUser
+                         ? "bg-violet-600/20 border-violet-500/40 text-violet-300"
+                         : "bg-rose-600/20 border-rose-500/40 text-rose-300"
+                     }`}
+                   >
+                     {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                   </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    
-                    {/* Attachment Render inside bubbles if present */}
-                    {isUser && customMsg.mediaUrl && (
-                      <div className="mb-1 shrink-0 max-w-[240px] rounded-2xl overflow-hidden border border-white/10 bg-slate-900/60 p-2 text-left shadow-lg self-end">
-                        {customMsg.mediaType?.startsWith("image/") ? (
-                          <img 
-                            src={customMsg.mediaUrl} 
-                            alt={customMsg.mediaName} 
-                            className="object-cover max-h-[150px] rounded-xl w-full" 
-                            referrerPolicy="no-referrer" 
-                          />
-                        ) : (
-                          <div className="flex items-center gap-2 py-2 px-3 bg-slate-950/40 rounded-lg">
-                            <FileCheck className="h-4 w-4 text-violet-400 shrink-0" />
-                            <span className="truncate font-mono text-[11px] text-violet-200 leading-tight block max-w-[150px]">{customMsg.mediaName}</span>
-                          </div>
-                        )}
-                        <div className="mt-1.5 flex items-center gap-1.5 text-[9px] font-mono text-emerald-400 bg-emerald-950/20 px-2 py-0.5 rounded border border-emerald-900/30 w-max">
-                          <Activity className="h-2.5 w-2.5 animate-pulse" />
-                          Visual Symptoms Synced
-                        </div>
-                      </div>
-                    )}
+                   <div className="flex flex-col gap-1.5">
+                     
+                     {/* Attachment Render inside bubbles if present */}
+                     {isUser && customMsg.mediaUrl && (
+                       <div className="mb-1 shrink-0 max-w-[240px] rounded-2xl overflow-hidden border border-white/10 bg-slate-900/60 p-2 text-left shadow-lg self-end">
+                         {customMsg.mediaType?.startsWith("image/") ? (
+                           <img 
+                             src={customMsg.mediaUrl} 
+                             alt={customMsg.mediaName} 
+                             className="object-cover max-h-[150px] rounded-xl w-full" 
+                             referrerPolicy="no-referrer" 
+                           />
+                         ) : (
+                           <div className="flex items-center gap-2 py-2 px-3 bg-slate-950/40 rounded-lg">
+                             <FileCheck className="h-4 w-4 text-violet-400 shrink-0" />
+                             <span className="truncate font-mono text-[11px] text-violet-200 leading-tight block max-w-[150px]">{customMsg.mediaName}</span>
+                           </div>
+                         )}
+                         <div className="mt-1.5 flex items-center gap-1.5 text-[9px] font-mono text-emerald-400 bg-emerald-950/20 px-2 py-0.5 rounded border border-emerald-900/30 w-max">
+                           <Activity className="h-2.5 w-2.5 animate-pulse" />
+                           Visual Symptoms Synced
+                         </div>
+                       </div>
+                     )}
 
-                    <div
-                      className={`p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed whitespace-pre-wrap shadow-md ${
-                        isUser
-                          ? "bg-violet-500/15 border border-violet-500/20 rounded-tr-none text-violet-100"
-                          : "bg-white/[0.02] border border-white/5 rounded-tl-none text-foreground/90 font-sans"
-                      }`}
-                    >
-                      {text}
-                    </div>
-                    <span className={`text-[9px] text-[#d1d0ce]/30 font-mono ${isUser ? "text-right" : "text-left"}`}>
-                      {m.timestamp}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-            
-            {loading && (
-              <div className="flex gap-3 max-w-[85%] mr-auto items-center">
-                <div className="h-8 w-8 rounded-full bg-rose-600/10 border border-rose-500/30 flex items-center justify-center text-rose-300 animate-pulse animate-spin" style={{ animationDuration: '4s' }}>
-                  <Bot className="h-4 w-4" />
-                </div>
-                <div className="bg-white/[0.01] border border-white/5 p-4 rounded-2xl rounded-tl-none flex items-center gap-2 shadow-sm">
-                  <div className="flex space-x-1.5">
-                    <div className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                    <div className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                    <div className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" />
-                  </div>
-                  <span className="text-[10px] text-foreground/45 font-mono ml-1">PulsePoint medical triage scanning...</span>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-        )}
+                     <div
+                       className={`p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed whitespace-pre-wrap shadow-md ${
+                         isUser
+                           ? "bg-violet-500/15 border border-violet-500/20 rounded-tr-none text-violet-100"
+                           : "bg-white/[0.02] border border-white/5 rounded-tl-none text-foreground/90 font-sans"
+                       }`}
+                     >
+                       {text}
+                     </div>
+                     <span className={`text-[9px] text-[#d1d0ce]/30 font-mono ${isUser ? "text-right" : "text-left"}`}>
+                       {m.timestamp}
+                     </span>
+                   </div>
+                 </div>
+               );
+             })}
+             
+             {loading && (
+               <div className="flex gap-3 max-w-[85%] mr-auto items-center">
+                 <div className="h-8 w-8 rounded-full bg-rose-600/10 border border-rose-500/30 flex items-center justify-center text-rose-300 animate-pulse animate-spin" style={{ animationDuration: '4s' }}>
+                   <Bot className="h-4 w-4" />
+                 </div>
+                 <div className="bg-white/[0.01] border border-white/5 p-4 rounded-2xl rounded-tl-none flex items-center gap-2 shadow-sm">
+                   <div className="flex space-x-1.5">
+                     <div className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                     <div className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                     <div className="w-1.5 h-1.5 bg-violet-400 rounded-full animate-bounce" />
+                   </div>
+                   <span className="text-[10px] text-foreground/45 font-mono ml-1">PulsePoint medical triage scanning...</span>
+                 </div>
+               </div>
+             )}
+             <div ref={messagesEndRef} />
+           </div>
+         )}
 
-        {/* pre-send attachment status bar tray */}
-        {attachedFile && (
-          <div className="p-3.5 border-t border-white/5 bg-slate-950/70 flex items-center justify-between gap-3 text-xs sm:text-sm backdrop-blur-sm">
-            <div className="flex items-center gap-2 text-violet-300 justify-start">
-              <Paperclip className="h-4 w-4 text-violet-400 animate-bounce" />
-              <div className="text-left font-sans">
-                <span className="truncate font-mono text-xs font-semibold block max-w-[220px]">{attachedFileName}</span>
-                <span className="text-[9px] text-emerald-400 font-mono flex items-center gap-1 mt-0.5 font-bold">
-                  ✓ Ready for clinical symptom scan
-                </span>
-              </div>
-            </div>
-            <button 
-              onClick={clearAttachment} 
-              className="hover:bg-rose-950/40 p-1.5 rounded-full text-rose-400 transition-colors bg-rose-950/20 border border-rose-900/30 select-none cursor-pointer text-xs"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        )}
+         {/* pre-send attachment status bar tray */}
+         {attachedFile && (
+           <div className="p-3.5 border-t border-white/5 bg-slate-950/70 flex items-center justify-between gap-3 text-xs sm:text-sm backdrop-blur-sm">
+             <div className="flex items-center gap-2 text-violet-300 justify-start">
+               <Paperclip className="h-4 w-4 text-violet-400 animate-bounce" />
+               <div className="text-left font-sans">
+                 <span className="truncate font-mono text-xs font-semibold block max-w-[220px]">{attachedFileName}</span>
+                 <span className="text-[9px] text-emerald-400 font-mono flex items-center gap-1 mt-0.5 font-bold">
+                   ✓ Ready for clinical symptom scan
+                 </span>
+               </div>
+             </div>
+             <button 
+               onClick={clearAttachment} 
+               className="hover:bg-rose-950/40 p-1.5 rounded-full text-rose-400 transition-colors bg-rose-950/20 border border-rose-900/30 select-none cursor-pointer text-xs"
+             >
+               <X className="h-4 w-4" />
+             </button>
+           </div>
+         )}
 
-        {/* Always Available Floating Suggestions Chips Row */}
-        <div className="flex gap-2 overflow-x-auto px-4 py-2 border-t border-white/5 bg-slate-950/35 scrollbar-thin scrollbar-thumb-white/10">
-          <div className="flex gap-2 py-1">
-            {SUGGESTIONS.map((suggestion, sIdx) => (
-              <button
-                key={sIdx}
-                onClick={() => handleSend(suggestion.prompt)}
-                disabled={loading}
-                className="whitespace-nowrap shrink-0 text-xs font-semibold text-violet-200 hover:text-white bg-violet-950/30 hover:bg-violet-900/40 border border-violet-800/20 hover:border-violet-500/30 rounded-full px-3 py-1.5 transition-all cursor-pointer select-none active:scale-95"
-              >
-                {suggestion.label}
-              </button>
-            ))}
-          </div>
-        </div>
+         {/* Always Available Floating Suggestions Chips Row */}
+         <div className="flex gap-2 overflow-x-auto px-4 py-2 border-t border-white/5 bg-[#050212]/50 scrollbar-none">
+           <div className="flex gap-2 py-1">
+             {SUGGESTIONS.map((suggestion, sIdx) => (
+               <button
+                 key={sIdx}
+                 onClick={() => handleSend(suggestion.prompt)}
+                 disabled={loading}
+                 className="whitespace-nowrap shrink-0 text-[11px] font-semibold text-zinc-300 hover:text-white bg-zinc-900/40 hover:bg-gradient-to-r hover:from-pink-900/30 hover:to-purple-900/30 border border-white/5 hover:border-violet-500/20 rounded-full px-2.5 py-1.5 transition-all cursor-pointer select-none active:scale-95"
+               >
+                 {suggestion.label}
+               </button>
+             ))}
+           </div>
+         </div>
 
-        {/* Input Footer Typing Section */}
-        <div className="border-t border-white/5 p-3.5 bg-slate-950/60 flex items-center gap-2">
-          
-          {/* File Upload Hidden Input & Trigger Button */}
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleFileChange} 
-            accept="image/*,application/pdf" 
-            className="hidden" 
-          />
-          <button
-            onClick={triggerFileSelect}
-            disabled={loading}
-            className="h-[42px] w-[42px] shrink-0 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-[#f2f1ef]/65 hover:text-white transition-all flex items-center justify-center cursor-pointer active:scale-95"
-            title="Upload clinical reports or skin rash photo"
-          >
-            <Paperclip className="h-4 w-4" />
-          </button>
+         {/* Input Footer Typing Section - Gemini Styled with Moving Border Glow */}
+         <div className="p-3.5 bg-zinc-950/80 border-t border-white/5 flex flex-col gap-2.5">
+           <div className="moving-border-container-pulse p-[1.5px] rounded-2xl shadow-xl shadow-purple-950/15">
+             <div className="bg-[#050212] rounded-[14.5px] p-2 flex flex-col md:flex-row gap-2">
+               
+               {/* Hidden Inputs */}
+               <input 
+                 type="file" 
+                 ref={fileInputRef} 
+                 onChange={handleFileChange} 
+                 accept="image/*,application/pdf" 
+                 className="hidden" 
+               />
 
-          {/* Voice Input Trigger Button */}
-          <button
-            onClick={toggleListening}
-            disabled={loading}
-            className={`h-[42px] w-[42px] shrink-0 rounded-xl border transition-all flex items-center justify-center cursor-pointer active:scale-95 ${
-              isListening 
-                ? "bg-rose-600 border-rose-500 animate-pulse text-white" 
-                : "bg-white/[0.02] hover:bg-white/[0.06] border border-white/10 text-[#f2f1ef]/65 hover:text-white"
-            }`}
-            title="Talk to PulsePoint AI"
-          >
-            {isListening ? (
-              <MicOff className="h-4 w-4 text-white" />
-            ) : (
-              <Mic className="h-4 w-4" />
-            )}
-          </button>
+               <input
+                 type="text"
+                 value={input}
+                 onChange={(e) => setInput(e.target.value)}
+                 onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                 placeholder={isListening ? "Listening with somatic audio sensors..." : "Ask PulsePoint: remedies, diets, medicines or triage..."}
+                 disabled={loading}
+                 className="flex-1 bg-transparent px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none pointer-events-auto md:text-base selection:bg-violet-500/30"
+               />
+               
+               <div className="flex items-center justify-between gap-1.5 px-2 pb-1.5 md:pb-0 shrink-0 border-t md:border-t-0 border-white/5 pt-1.5 md:pt-0">
+                 <div className="flex items-center gap-1">
+                   {/* File Upload Trigger */}
+                   <button
+                     onClick={triggerFileSelect}
+                     disabled={loading}
+                     className="h-9 w-9 rounded-full hover:bg-white/[0.06] text-zinc-400 hover:text-pink-400 transition-all flex items-center justify-center cursor-pointer active:scale-95 border border-transparent hover:border-pink-500/20"
+                     title="Upload clinical reports or skin rash photo"
+                   >
+                     <Paperclip className="h-4.5 w-4.5" />
+                   </button>
 
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            placeholder={isListening ? "Listening... Speak now" : "Describe symptoms or type here..."}
-            disabled={loading}
-            className="flex-1 bg-white/[0.02] border border-white/10 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-foreground/20 focus:outline-none focus:border-violet-500/40 transition-colors pointer-events-auto"
-          />
-          
-          <button
-            onClick={() => handleSend()}
-            disabled={loading || (!input.trim() && !attachedFile)}
-            className="h-[42px] w-[42px] shrink-0 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:bg-white/[0.02] text-white disabled:text-white/20 transition-all flex items-center justify-center cursor-pointer active:scale-95 shadow-md animate-none"
-          >
-            <Send className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
+                   {/* Voice Input Trigger Button */}
+                   <button
+                     onClick={toggleListening}
+                     disabled={loading}
+                     className={`h-9 w-9 rounded-full transition-all flex items-center justify-center cursor-pointer active:scale-95 ${
+                       isListening 
+                         ? "bg-rose-600 animate-pulse text-white" 
+                         : "hover:bg-white/[0.06] text-zinc-400 hover:text-purple-400 border border-transparent hover:border-purple-500/20"
+                     }`}
+                     title="Talk to PulsePoint AI"
+                   >
+                     {isListening ? (
+                       <MicOff className="h-4.5 w-4.5 text-white" />
+                     ) : (
+                       <Mic className="h-4.5 w-4.5" />
+                     )}
+                   </button>
+                 </div>
+
+                 {/* Send Button */}
+                 <button
+                   onClick={() => handleSend()}
+                   disabled={loading || (!input.trim() && !attachedFile)}
+                   className="h-9 px-4 rounded-full bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-500 hover:brightness-110 disabled:opacity-30 disabled:hover:brightness-100 text-white transition-all flex items-center gap-2 cursor-pointer active:scale-95 font-sans font-bold shadow-lg shadow-purple-500/10 text-xs"
+                 >
+                   <span>Ask PulsePoint</span>
+                   <Send className="h-3 w-3" />
+                 </button>
+               </div>
+             </div>
+           </div>
+           
+           {/* Small HIPAA Compliance Label below the input container */}
+           <p className="text-[10px] text-zinc-500 text-center select-none leading-relaxed font-sans max-w-lg mx-auto">
+             PulsePoint AI provides clinical triage and wellness plans. In acute crises, use the <span className="text-red-400 font-semibold uppercase">Manual SOS</span> emergency protocol.
+           </p>
+         </div>
+       </div>
+     </div>
 
         {/* Right Side: Conditional Diagnostic Report Column */}
         {messages.length > 0 && (

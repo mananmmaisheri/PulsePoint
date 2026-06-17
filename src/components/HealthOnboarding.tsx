@@ -494,7 +494,7 @@ export default function HealthOnboarding() {
                 <span className="text-xs font-mono font-black text-violet-400 bg-violet-950/80 px-2.5 py-1 rounded">
                   SECTION {currentStep}/6
                 </span>
-                <span className="text-xs text-zinc-300 font-display font-medium">
+                <span className="text-sm text-zinc-100 font-display font-semibold tracking-wide">
                   {currentStep === 1 && "Basic Information Details"}
                   {currentStep === 2 && "Personal Clinical History"}
                   {currentStep === 3 && "Genetic Family Linage"}
@@ -503,7 +503,7 @@ export default function HealthOnboarding() {
                   {currentStep === 6 && "Substantive Blood EHR Reports"}
                 </span>
               </div>
-              <span className="text-[10px] text-zinc-500 font-mono font-bold">
+              <span className="text-xs text-zinc-400 font-mono font-bold">
                 {Math.round(currentProgress)}% Done
               </span>
             </div>
@@ -531,30 +531,30 @@ export default function HealthOnboarding() {
                   {/* SECTION 1: BASIC INFORMATION */}
                   {currentStep === 1 && (
                     <div className="space-y-5">
-                      <div className="p-4 bg-violet-950/15 border border-violet-800/30 rounded-2xl text-xs text-violet-300 leading-normal flex gap-3">
+                      <div className="p-4 bg-violet-950/25 border border-violet-800/40 rounded-2xl text-sm text-violet-200 leading-relaxed flex gap-3 shadow-lg shadow-violet-950/20">
                         <Info className="h-5 w-5 text-violet-400 shrink-0 mt-0.5" />
                         <span>This diagnostic grounds automatic biological calculations (BMI, fluid quotas, cardiac stress limits) mapping correct advice in our AI Assistant.</span>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-mono tracking-widest text-zinc-300 font-extrabold uppercase select-none block">
+                        <div className="space-y-2">
+                          <label className="text-xs font-mono tracking-wider text-violet-300 font-bold uppercase select-none block">
                             Full Individual Name
                           </label>
                           <div className="relative">
-                            <User className="absolute left-3.5 top-2.5 h-4.5 w-4.5 text-zinc-500" />
+                            <User className="absolute left-3.5 top-3 h-4.5 w-4.5 text-zinc-400" />
                             <input
                               type="text"
                               placeholder="Alex Carter"
                               value={formData.fullName}
                               onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                              className="w-full bg-black/40 border border-white/5 rounded-xl py-2 pl-10 pr-4 text-xs font-sans text-white focus:outline-none focus:ring-1 focus:ring-violet-500"
+                              className="w-full bg-black/60 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm font-sans text-white focus:outline-none focus:ring-2 focus:ring-violet-500/80 focus:border-transparent transition-all"
                             />
                           </div>
                         </div>
 
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-mono tracking-widest text-zinc-300 font-extrabold uppercase select-none block">
+                        <div className="space-y-2">
+                          <label className="text-xs font-mono tracking-wider text-violet-300 font-bold uppercase select-none block">
                             Age Designation
                           </label>
                           <input
@@ -563,32 +563,32 @@ export default function HealthOnboarding() {
                             max="120"
                             value={formData.age}
                             onChange={(e) => setFormData({...formData, age: e.target.value})}
-                            className="w-full bg-black/40 border border-white/5 rounded-xl py-2 px-3.5 text-xs font-sans text-white focus:outline-none focus:ring-1 focus:ring-violet-500"
+                            className="w-full bg-black/60 border border-white/10 rounded-xl py-2.5 px-3.5 text-sm font-sans text-white focus:outline-none focus:ring-2 focus:ring-violet-500/80 focus:border-transparent transition-all"
                           />
                         </div>
 
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-mono tracking-widest text-zinc-300 font-extrabold uppercase select-none block">
+                        <div className="space-y-2">
+                          <label className="text-xs font-mono tracking-wider text-violet-300 font-bold uppercase select-none block">
                             Gender Assigned at Birth
                           </label>
                           <div className="flex gap-4">
                             {["Male", "Female", "Other"].map((gen) => (
-                              <label key={gen} className="flex-1 flex items-center justify-between p-2 rounded-xl bg-black/30 border border-white/5 cursor-pointer hover:border-white/10 select-none">
-                                <span className="text-xs text-zinc-300 font-sans">{gen}</span>
+                              <label key={gen} className="flex-1 flex items-center justify-between p-3 rounded-xl bg-black/50 border border-white/10 cursor-pointer hover:border-violet-500/30 hover:bg-black/70 select-none transition-all">
+                                <span className="text-sm text-zinc-200 font-sans font-medium">{gen}</span>
                                 <input
                                   type="radio"
                                   name="gender"
                                   checked={formData.gender === gen}
                                   onChange={() => handleRadioChange("gender", gen)}
-                                  className="accent-violet-500"
+                                  className="accent-violet-500 h-4 w-4"
                                 />
                               </label>
                             ))}
                           </div>
                         </div>
 
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-mono tracking-widest text-zinc-300 font-extrabold uppercase select-none block">
+                        <div className="space-y-2">
+                          <label className="text-xs font-mono tracking-wider text-violet-300 font-bold uppercase select-none block">
                             Height (centimeters)
                           </label>
                           <div className="relative">
@@ -598,14 +598,14 @@ export default function HealthOnboarding() {
                               max="250"
                               value={formData.height}
                               onChange={(e) => setFormData({...formData, height: e.target.value})}
-                              className="w-full bg-black/40 border border-white/5 rounded-xl py-2 px-3.5 pr-12 text-xs font-sans text-white focus:outline-none focus:ring-1 focus:ring-violet-500"
+                              className="w-full bg-black/60 border border-white/10 rounded-xl py-2.5 px-3.5 pr-12 text-sm font-sans text-white focus:outline-none focus:ring-2 focus:ring-violet-500/80 focus:border-transparent transition-all"
                             />
-                            <span className="absolute right-3.5 top-2 text-[10px] font-mono text-zinc-500 font-bold uppercase">CM</span>
+                            <span className="absolute right-3.5 top-3 text-xs font-mono text-zinc-400 font-bold uppercase">CM</span>
                           </div>
                         </div>
 
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-mono tracking-widest text-zinc-300 font-extrabold uppercase select-none block">
+                        <div className="space-y-2">
+                          <label className="text-xs font-mono tracking-wider text-violet-300 font-bold uppercase select-none block">
                             Absolute Body Weight (kilograms)
                           </label>
                           <div className="relative">
@@ -615,29 +615,29 @@ export default function HealthOnboarding() {
                               max="300"
                               value={formData.weight}
                               onChange={(e) => setFormData({...formData, weight: e.target.value})}
-                              className="w-full bg-black/40 border border-white/5 rounded-xl py-2 px-3.5 pr-12 text-xs font-sans text-white focus:outline-none focus:ring-1 focus:ring-violet-500"
+                              className="w-full bg-black/60 border border-white/10 rounded-xl py-2.5 px-3.5 pr-12 text-sm font-sans text-white focus:outline-none focus:ring-2 focus:ring-violet-500/80 focus:border-transparent transition-all"
                             />
-                            <span className="absolute right-3.5 top-2 text-[10px] font-mono text-zinc-500 font-bold uppercase">KG</span>
+                            <span className="absolute right-3.5 top-3 text-xs font-mono text-zinc-400 font-bold uppercase">KG</span>
                           </div>
                         </div>
 
                         {/* Calculated BMI HUD */}
-                        <div className="p-4 bg-gradient-to-r from-[#0d072b] to-[#04091a] border border-white/5 rounded-2xl flex items-center justify-between gap-4">
+                        <div className="p-4 bg-gradient-to-r from-[#140b42] to-[#08122c] border border-violet-500/30 rounded-2xl flex items-center justify-between gap-4 shadow-lg shadow-violet-950/40">
                           <div className="text-left">
-                            <span className="text-[8px] font-mono text-zinc-500 uppercase font-black">Dynamic BMI Index</span>
+                            <span className="text-[11px] font-mono text-zinc-400 uppercase font-bold tracking-wide">Dynamic BMI Index</span>
                             <div className="flex items-baseline gap-1 mt-1">
                               <span className="text-2xl font-mono font-black text-white">{bmi}</span>
-                              <span className="text-[10px] text-zinc-400 font-mono">kg/m²</span>
+                              <span className="text-xs text-zinc-300 font-mono">kg/m²</span>
                             </div>
                           </div>
                           <div className="text-right">
-                            <span className="text-[8px] font-mono text-zinc-500 uppercase font-black">BMI Status</span>
-                            <span className={`block text-xs font-bold uppercase mt-1 px-3 py-1 rounded-full ${
+                            <span className="text-[11px] font-mono text-zinc-400 uppercase font-bold tracking-wide">BMI Status</span>
+                            <span className={`block text-xs font-bold uppercase mt-1 px-3.5 py-1.5 rounded-full ${
                               bmiCategory === "Normal" 
-                                ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+                                ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
                                 : bmiCategory === "Overweight"
-                                  ? "bg-amber-500/10 border border-amber-500/20 text-amber-300"
-                                  : "bg-red-500/10 border border-red-500/20 text-red-400"
+                                  ? "bg-amber-500/10 border border-amber-500/30 text-amber-300"
+                                  : "bg-red-500/10 border border-red-500/30 text-red-400"
                             }`}>
                               {bmiCategory}
                             </span>
@@ -649,13 +649,13 @@ export default function HealthOnboarding() {
 
                   {/* SECTION 2: MEDICAL HISTORY checkboxes */}
                   {currentStep === 2 && (
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                       <div>
-                        <h4 className="text-sm font-sans font-semibold text-white">Have you ever been diagnosed with:</h4>
-                        <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider mt-0.5">Select all relevant pre-diagnosed conditions below</p>
+                        <h4 className="text-lg font-display font-bold text-white tracking-wide">Have you ever been diagnosed with:</h4>
+                        <p className="text-xs md:text-sm text-zinc-400 font-mono tracking-wide mt-1.5">Select all relevant pre-diagnosed conditions below</p>
                       </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
                         {[
                           "Diabetes",
                           "Hypertension (High BP)",
@@ -674,17 +674,17 @@ export default function HealthOnboarding() {
                               key={cond}
                               type="button"
                               onClick={() => handleCheckboxChange("medicalHistory", cond)}
-                              className={`p-3.5 rounded-xl border text-left text-xs transition-all flex items-center justify-between cursor-pointer active:scale-98 ${
+                              className={`p-4 rounded-xl border text-left text-sm font-semibold transition-all flex items-center justify-between cursor-pointer active:scale-98 select-none ${
                                 isChecked 
-                                  ? "bg-violet-600/15 border-violet-500 text-white shadow-md shadow-violet-500/10" 
-                                  : "bg-black/30 border-white/5 hover:border-white/10 text-zinc-300 hover:text-white"
+                                  ? "bg-violet-600/25 border-violet-500 text-white shadow-lg shadow-violet-500/20 ring-1 ring-violet-500/30" 
+                                  : "bg-black/50 border-white/10 hover:border-violet-500/40 hover:bg-black/70 text-zinc-300 hover:text-white"
                               }`}
                             >
-                              <span>{cond}</span>
-                              <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center ${
-                                isChecked ? "border-violet-400 bg-violet-600" : "border-zinc-700"
+                              <span className="tracking-wide">{cond}</span>
+                              <div className={`h-5 w-5 rounded-lg border-2 flex items-center justify-center transition-all ${
+                                isChecked ? "border-violet-400 bg-violet-600" : "border-zinc-700 bg-black/40"
                               }`}>
-                                {isChecked && <span className="text-[8px] font-black">✓</span>}
+                                {isChecked && <span className="text-[10px] font-black text-white">✓</span>}
                               </div>
                             </button>
                           );
@@ -694,17 +694,17 @@ export default function HealthOnboarding() {
                         <button
                           type="button"
                           onClick={() => handleCheckboxChange("medicalHistory", "None")}
-                          className={`p-3.5 rounded-xl border text-left text-xs transition-all flex items-center justify-between cursor-pointer col-span-2 md:col-span-1 border-white/5 ${
+                          className={`p-4 rounded-xl border text-left text-sm font-bold transition-all flex items-center justify-between cursor-pointer col-span-1 sm:col-span-2 md:col-span-1 select-none ${
                             formData.medicalHistory.includes("None")
-                              ? "bg-emerald-600/15 border-emerald-500 text-white"
-                              : "bg-black/30 border-white/5 hover:border-white/10 text-zinc-300"
+                              ? "bg-emerald-600/25 border-emerald-500 text-white shadow-lg shadow-emerald-500/20 ring-1 ring-emerald-500/30"
+                              : "bg-black/50 border-white/10 hover:border-emerald-500/40 hover:bg-black/70 text-zinc-300"
                           }`}
                         >
-                          <span className="font-semibold">None of the above</span>
-                          <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center ${
-                            formData.medicalHistory.includes("None") ? "border-emerald-400 bg-emerald-600" : "border-zinc-700"
+                          <span className="tracking-wide">None of the above</span>
+                          <div className={`h-5 w-5 rounded-lg border-2 flex items-center justify-center transition-all ${
+                            formData.medicalHistory.includes("None") ? "border-emerald-400 bg-emerald-600" : "border-zinc-700 bg-black/40"
                           }`}>
-                            {formData.medicalHistory.includes("None") && <span className="text-[8px] font-black">✓</span>}
+                            {formData.medicalHistory.includes("None") && <span className="text-[10px] font-black text-white">✓</span>}
                           </div>
                         </button>
                       </div>
@@ -713,13 +713,13 @@ export default function HealthOnboarding() {
 
                   {/* SECTION 3: FAMILY HISTORY checkboxes */}
                   {currentStep === 3 && (
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                       <div>
-                        <h4 className="text-sm font-sans font-semibold text-white">Does anyone in your immediate family have:</h4>
-                        <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider mt-0.5">Assists genetic predisposition chronic disease modeling</p>
+                        <h4 className="text-lg font-display font-bold text-white tracking-wide">Does anyone in your immediate family have:</h4>
+                        <p className="text-xs md:text-sm text-zinc-400 font-mono tracking-wide mt-1.5">Assists genetic predisposition chronic disease modeling</p>
                       </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
                         {[
                           "Diabetes",
                           "High Blood Pressure",
@@ -734,17 +734,17 @@ export default function HealthOnboarding() {
                               key={famC}
                               type="button"
                               onClick={() => handleCheckboxChange("familyHistory", famC)}
-                              className={`p-3.5 rounded-xl border text-left text-xs transition-all flex items-center justify-between cursor-pointer active:scale-98 ${
+                              className={`p-4 rounded-xl border text-left text-sm font-semibold transition-all flex items-center justify-between cursor-pointer active:scale-98 select-none ${
                                 isChecked 
-                                  ? "bg-violet-600/15 border-violet-500 text-white" 
-                                  : "bg-black/30 border-white/5 hover:border-white/10 text-zinc-300"
+                                  ? "bg-violet-600/25 border-violet-500 text-white shadow-lg shadow-violet-500/20 ring-1 ring-violet-500/30" 
+                                  : "bg-black/50 border-white/10 hover:border-violet-500/40 hover:bg-black/70 text-zinc-300 hover:text-white"
                               }`}
                             >
-                              <span>{famC}</span>
-                              <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center ${
-                                isChecked ? "border-violet-400 bg-violet-600" : "border-zinc-700"
+                              <span className="tracking-wide">{famC}</span>
+                              <div className={`h-5 w-5 rounded-lg border-2 flex items-center justify-center transition-all ${
+                                isChecked ? "border-violet-400 bg-violet-600" : "border-zinc-700 bg-black/40"
                               }`}>
-                                {isChecked && <span className="text-[8px] font-black">✓</span>}
+                                {isChecked && <span className="text-[10px] font-black text-white">✓</span>}
                               </div>
                             </button>
                           );
@@ -754,17 +754,17 @@ export default function HealthOnboarding() {
                         <button
                           type="button"
                           onClick={() => handleCheckboxChange("familyHistory", "None")}
-                          className={`p-3.5 rounded-xl border text-left text-xs transition-all flex items-center justify-between cursor-pointer border-white/5 col-span-2 md:col-span-1 ${
+                          className={`p-4 rounded-xl border text-left text-sm font-bold transition-all flex items-center justify-between cursor-pointer col-span-1 sm:col-span-2 md:col-span-1 select-none ${
                             formData.familyHistory.includes("None")
-                              ? "bg-emerald-600/15 border-emerald-500 text-white"
-                              : "bg-black/30 border-white/5 hover:border-white/10 text-zinc-300"
+                              ? "bg-emerald-600/25 border-emerald-500 text-white shadow-lg shadow-emerald-500/20 ring-1 ring-emerald-500/30"
+                              : "bg-black/50 border-white/10 hover:border-emerald-500/40 hover:bg-black/70 text-zinc-300"
                           }`}
                         >
-                          <span className="font-semibold">None of the above</span>
-                          <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center ${
-                            formData.familyHistory.includes("None") ? "border-emerald-400 bg-emerald-600" : "border-zinc-700"
+                          <span className="tracking-wide">None of the above</span>
+                          <div className={`h-5 w-5 rounded-lg border-2 flex items-center justify-center transition-all ${
+                            formData.familyHistory.includes("None") ? "border-emerald-400 bg-emerald-600" : "border-zinc-700 bg-black/40"
                           }`}>
-                            {formData.familyHistory.includes("None") && <span className="text-[8px] font-black">✓</span>}
+                            {formData.familyHistory.includes("None") && <span className="text-[10px] font-black text-white">✓</span>}
                           </div>
                         </button>
                       </div>
@@ -773,26 +773,26 @@ export default function HealthOnboarding() {
 
                   {/* SECTION 4: LIFESTYLE & HACKATHON BONUS MCQS */}
                   {currentStep === 4 && (
-                    <div className="space-y-5">
-                      <div className="flex items-center gap-2 bg-[#090b1e] border border-violet-900/40 px-3.5 py-1.5 rounded-xl text-[10px] font-mono text-violet-300 font-bold w-fit animate-pulse">
-                        <Award className="h-3.5 w-3.5 text-violet-400" />
-                        Hackathon Winning Chronic Corrinators Active
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-2.5 bg-violet-600/10 border border-violet-500/30 px-4 py-2 rounded-2xl text-[11px] font-mono text-violet-300 font-black w-fit animate-pulse shadow-md">
+                        <Award className="h-4 w-4 text-violet-400" />
+                        HACKATHON PRECISION CORRELATION ENGINE ACTIVE
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4.5">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         {/* Smoking */}
-                        <div className="space-y-1.5 text-left">
-                          <span className="text-[9px] font-mono tracking-widest text-zinc-400 font-extrabold uppercase block">Do you smoke?</span>
+                        <div className="space-y-2 text-left">
+                          <span className="text-xs font-mono tracking-wider text-violet-300 font-bold uppercase block">Do you smoke?</span>
                           <div className="grid grid-cols-3 gap-2">
                             {["Never", "Occasionally", "Regularly"].map((v) => (
                               <button
                                 type="button"
                                 key={v}
                                 onClick={() => handleRadioChange("smoking", v)}
-                                className={`py-2 px-1 text-[10px] rounded-lg border font-mono tracking-wide ${
+                                className={`py-2.5 px-2 text-xs md:text-sm rounded-xl border font-semibold transition-all select-none active:scale-98 ${
                                   formData.smoking === v 
-                                    ? "bg-violet-600/20 border-violet-500 text-white font-bold" 
-                                    : "bg-black/30 border-white/5 text-zinc-400 hover:text-zinc-200"
+                                    ? "bg-violet-600/25 border-violet-500 text-white font-bold shadow-md shadow-violet-500/20" 
+                                    : "bg-black/50 border-white/10 text-zinc-400 hover:text-zinc-200 hover:border-white/20"
                                 }`}
                               >
                                 {v}
@@ -802,18 +802,18 @@ export default function HealthOnboarding() {
                         </div>
 
                         {/* Alcohol */}
-                        <div className="space-y-1.5 text-left">
-                          <span className="text-[9px] font-mono tracking-widest text-zinc-400 font-extrabold uppercase block">Do you consume alcohol?</span>
+                        <div className="space-y-2 text-left">
+                          <span className="text-xs font-mono tracking-wider text-violet-300 font-bold uppercase block">Do you consume alcohol?</span>
                           <div className="grid grid-cols-3 gap-2">
                             {["Never", "Occasionally", "Frequently"].map((v) => (
                               <button
                                 type="button"
                                 key={v}
                                 onClick={() => handleRadioChange("alcohol", v)}
-                                className={`py-2 px-1 text-[10px] rounded-lg border font-mono tracking-wide ${
+                                className={`py-2.5 px-2 text-xs md:text-sm rounded-xl border font-semibold transition-all select-none active:scale-98 ${
                                   formData.alcohol === v 
-                                    ? "bg-violet-600/20 border-violet-500 text-white font-bold" 
-                                    : "bg-black/30 border-white/5 text-zinc-400 hover:text-zinc-200"
+                                    ? "bg-violet-600/25 border-violet-500 text-white font-bold shadow-md shadow-violet-500/20" 
+                                    : "bg-black/50 border-white/10 text-zinc-400 hover:text-zinc-200 hover:border-white/20"
                                 }`}
                               >
                                 {v}
@@ -823,18 +823,18 @@ export default function HealthOnboarding() {
                         </div>
 
                         {/* Exercise */}
-                        <div className="space-y-1.5 text-left">
-                          <span className="text-[9px] font-mono tracking-widest text-zinc-400 font-extrabold uppercase block">How often do you exercise?</span>
-                          <div className="grid grid-cols-4 gap-1.5">
+                        <div className="space-y-2 text-left">
+                          <span className="text-xs font-mono tracking-wider text-violet-300 font-bold uppercase block">How often do you exercise?</span>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {["Never", "1–2 days/week", "3–5 days/week", "Daily"].map((v) => (
                               <button
                                 type="button"
                                 key={v}
                                 onClick={() => handleRadioChange("exercise", v)}
-                                className={`py-2 px-1 text-[9px] rounded-lg border font-mono tracking-tight ${
+                                className={`py-3 px-1.5 text-xs rounded-xl border font-semibold transition-all select-none active:scale-98 ${
                                   formData.exercise === v 
-                                    ? "bg-violet-600/20 border-violet-500 text-white font-bold" 
-                                    : "bg-black/30 border-white/5 text-zinc-400 hover:text-zinc-200"
+                                    ? "bg-violet-600/25 border-violet-500 text-white font-bold shadow-md shadow-violet-500/20" 
+                                    : "bg-black/50 border-white/10 text-zinc-400 hover:text-zinc-200 hover:border-white/20"
                                 }`}
                               >
                                 {v}
@@ -844,18 +844,18 @@ export default function HealthOnboarding() {
                         </div>
 
                         {/* Sleep */}
-                        <div className="space-y-1.5 text-left">
-                          <span className="text-[9px] font-mono tracking-widest text-zinc-400 font-extrabold uppercase block">Average sleep per night?</span>
-                          <div className="grid grid-cols-4 gap-1.5">
+                        <div className="space-y-2 text-left">
+                          <span className="text-xs font-mono tracking-wider text-violet-300 font-bold uppercase block">Average sleep per night?</span>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {["Less than 5 hrs", "5–6 hrs", "7–8 hrs", "More than 8 hrs"].map((v) => (
                               <button
                                 type="button"
                                 key={v}
                                 onClick={() => handleRadioChange("sleep", v)}
-                                className={`py-2 px-1 text-[9px] rounded-lg border font-mono tracking-tight ${
+                                className={`py-3 px-1.5 text-[11px] sm:text-xs rounded-xl border font-semibold transition-all select-none active:scale-98 leading-tight ${
                                   formData.sleep === v 
-                                    ? "bg-violet-600/20 border-violet-500 text-white font-bold" 
-                                    : "bg-black/30 border-white/5 text-zinc-400 hover:text-zinc-200"
+                                    ? "bg-violet-600/25 border-violet-500 text-white font-bold shadow-md shadow-violet-500/20" 
+                                    : "bg-black/50 border-white/10 text-zinc-400 hover:text-zinc-200 hover:border-white/20"
                                 }`}
                               >
                                 {v}
@@ -865,18 +865,18 @@ export default function HealthOnboarding() {
                         </div>
 
                         {/* Water Intake */}
-                        <div className="space-y-1.5 text-left">
-                          <span className="text-[9px] font-mono tracking-widest text-zinc-400 font-extrabold uppercase block">Water Intake daily?</span>
-                          <div className="grid grid-cols-4 gap-1.5">
+                        <div className="space-y-2 text-left">
+                          <span className="text-xs font-mono tracking-wider text-violet-300 font-bold uppercase block">Water Intake daily?</span>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {["Less than 1L", "1–2L", "2–3L", "More than 3L"].map((v) => (
                               <button
                                 type="button"
                                 key={v}
                                 onClick={() => handleRadioChange("waterIntake", v)}
-                                className={`py-2 px-1 text-[9px] rounded-lg border font-mono tracking-tight ${
+                                className={`py-3 px-1.5 text-xs rounded-xl border font-semibold transition-all select-none active:scale-98 ${
                                   formData.waterIntake === v 
-                                    ? "bg-violet-600/20 border-violet-500 text-white font-bold" 
-                                    : "bg-black/30 border-white/5 text-zinc-400 hover:text-zinc-200"
+                                    ? "bg-violet-600/25 border-violet-500 text-white font-bold shadow-md shadow-violet-500/20" 
+                                    : "bg-black/50 border-white/10 text-zinc-400 hover:text-zinc-200 hover:border-white/20"
                                 }`}
                               >
                                 {v}
@@ -886,20 +886,20 @@ export default function HealthOnboarding() {
                         </div>
 
                         {/* Stress Level */}
-                        <div className="space-y-1.5 text-left">
-                          <span className="text-[9px] font-mono tracking-widest text-rose-300 font-extrabold uppercase block flex items-center gap-1">
-                            <Flame className="h-3 w-3 text-rose-400" /> Stress Level Index
+                        <div className="space-y-2 text-left">
+                          <span className="text-xs font-mono tracking-wider text-rose-300 font-bold uppercase block flex items-center gap-1.5">
+                            <Flame className="h-4 w-4 text-rose-400" /> Stress Level Index
                           </span>
-                          <div className="grid grid-cols-4 gap-1.5">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {["Low", "Moderate", "High", "Severe"].map((v) => (
                               <button
                                 type="button"
                                 key={v}
                                 onClick={() => handleRadioChange("stressLevel", v)}
-                                className={`py-2 px-1 text-[9px] rounded-lg border font-mono tracking-tight ${
+                                className={`py-3 px-1.5 text-xs rounded-xl border font-semibold transition-all select-none active:scale-98 ${
                                   formData.stressLevel === v 
-                                    ? "bg-rose-500/15 border-rose-500 text-white font-bold" 
-                                    : "bg-black/30 border-white/5 text-zinc-400 hover:text-zinc-200"
+                                    ? "bg-rose-500/25 border-rose-500 text-white font-bold shadow-md shadow-rose-500/20" 
+                                    : "bg-black/50 border-white/10 text-zinc-400 hover:text-zinc-200 hover:border-white/20"
                                 }`}
                               >
                                 {v}
@@ -909,18 +909,18 @@ export default function HealthOnboarding() {
                         </div>
 
                         {/* Diet Type */}
-                        <div className="space-y-1.5 text-left">
-                          <span className="text-[9px] font-mono tracking-widest text-zinc-400 font-extrabold uppercase block">Diet Classification</span>
-                          <div className="grid grid-cols-4 gap-1.5">
+                        <div className="space-y-2 text-left">
+                          <span className="text-xs font-mono tracking-wider text-violet-300 font-bold uppercase block">Diet Classification</span>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {["Vegetarian", "Non-Vegetarian", "Vegan", "Mixed"].map((v) => (
                               <button
                                 type="button"
                                 key={v}
                                 onClick={() => handleRadioChange("dietType", v)}
-                                className={`py-2 px-1 text-[9px] rounded-lg border font-mono tracking-tight ${
+                                className={`py-3 px-1.5 text-[11px] sm:text-xs rounded-xl border font-semibold transition-all select-none active:scale-98 leading-none ${
                                   formData.dietType === v 
-                                    ? "bg-violet-600/20 border-violet-500 text-white font-bold" 
-                                    : "bg-black/30 border-white/5 text-zinc-400 hover:text-zinc-200"
+                                    ? "bg-violet-600/25 border-violet-500 text-white font-bold shadow-md shadow-violet-500/20" 
+                                    : "bg-black/50 border-white/10 text-zinc-400 hover:text-zinc-200 hover:border-white/20"
                                 }`}
                               >
                                 {v}
@@ -930,18 +930,18 @@ export default function HealthOnboarding() {
                         </div>
 
                         {/* Daily Screen Time */}
-                        <div className="space-y-1.5 text-left">
-                          <span className="text-[9px] font-mono tracking-widest text-zinc-400 font-extrabold uppercase block">Daily Screen Time</span>
-                          <div className="grid grid-cols-4 gap-1.5">
+                        <div className="space-y-2 text-left">
+                          <span className="text-xs font-mono tracking-wider text-violet-300 font-bold uppercase block">Daily Screen Time</span>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {["<2 hrs", "2–4 hrs", "4–8 hrs", ">8 hrs"].map((v) => (
                               <button
                                 type="button"
                                 key={v}
                                 onClick={() => handleRadioChange("screenTime", v)}
-                                className={`py-2 px-1 text-[9px] rounded-lg border font-mono tracking-tight ${
+                                className={`py-3 px-1.5 text-[11px] sm:text-xs rounded-xl border font-semibold transition-all select-none active:scale-98 leading-none ${
                                   formData.screenTime === v 
-                                    ? "bg-violet-600/20 border-violet-500 text-white font-bold" 
-                                    : "bg-black/30 border-white/5 text-zinc-400 hover:text-zinc-200"
+                                    ? "bg-violet-600/25 border-violet-500 text-white font-bold shadow-md shadow-violet-500/20" 
+                                    : "bg-black/50 border-white/10 text-zinc-400 hover:text-zinc-200 hover:border-white/20"
                                 }`}
                               >
                                 {v}
@@ -951,18 +951,18 @@ export default function HealthOnboarding() {
                         </div>
 
                         {/* Physical Activity Level */}
-                        <div className="space-y-1.5 text-left md:col-span-2">
-                          <span className="text-[9px] font-mono tracking-widest text-zinc-400 font-extrabold uppercase block">Physical Activity Level</span>
-                          <div className="grid grid-cols-4 gap-1.5">
+                        <div className="space-y-2 text-left md:col-span-2">
+                          <span className="text-xs font-mono tracking-wider text-violet-300 font-bold uppercase block">Physical Activity Level</span>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {["Sedentary", "Lightly Active", "Moderately Active", "Very Active"].map((v) => (
                               <button
                                 type="button"
                                 key={v}
                                 onClick={() => handleRadioChange("activityLevel", v)}
-                                className={`py-2 px-1 text-[9px] rounded-lg border font-mono tracking-tight ${
+                                className={`py-3 px-1.5 text-[11px] sm:text-xs rounded-xl border font-semibold transition-all select-none active:scale-98 leading-none ${
                                   formData.activityLevel === v 
-                                    ? "bg-violet-600/20 border-violet-500 text-white font-bold" 
-                                    : "bg-black/30 border-white/5 text-zinc-400 hover:text-zinc-200"
+                                    ? "bg-violet-600/25 border-violet-500 text-white font-bold shadow-md shadow-violet-500/20" 
+                                    : "bg-black/50 border-white/10 text-zinc-400 hover:text-zinc-200 hover:border-white/20"
                                 }`}
                               >
                                 {v}
@@ -976,13 +976,13 @@ export default function HealthOnboarding() {
 
                   {/* SECTION 5: CURRENT SYMPTOMS checkboxes */}
                   {currentStep === 5 && (
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                       <div>
-                        <h4 className="text-sm font-sans font-semibold text-white">Select symptoms you currently experience:</h4>
-                        <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider mt-0.5">Captures acute parameters for risk level modeling</p>
+                        <h4 className="text-lg font-display font-bold text-white tracking-wide">Select symptoms you currently experience:</h4>
+                        <p className="text-xs md:text-sm text-zinc-400 font-mono tracking-wide mt-1.5">Captures acute parameters for risk level modeling</p>
                       </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
                         {[
                           "Fatigue",
                           "Frequent Urination",
@@ -1002,17 +1002,17 @@ export default function HealthOnboarding() {
                               key={symp}
                               type="button"
                               onClick={() => handleCheckboxChange("symptoms", symp)}
-                              className={`p-3.5 rounded-xl border text-left text-xs transition-all flex items-center justify-between cursor-pointer active:scale-98 ${
+                              className={`p-4 rounded-xl border text-left text-sm font-semibold transition-all flex items-center justify-between cursor-pointer active:scale-98 select-none ${
                                 isChecked 
-                                  ? "bg-violet-600/15 border-violet-500 text-white" 
-                                  : "bg-black/30 border-white/5 hover:border-white/10 text-zinc-300"
+                                  ? "bg-violet-600/25 border-violet-500 text-white shadow-lg shadow-violet-500/20 ring-1 ring-violet-500/30" 
+                                  : "bg-black/50 border-white/10 hover:border-violet-500/40 hover:bg-black/70 text-zinc-300 hover:text-white"
                               }`}
                             >
-                              <span>{symp}</span>
-                              <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center ${
-                                isChecked ? "border-violet-400 bg-violet-600" : "border-zinc-700"
+                              <span className="tracking-wide">{symp}</span>
+                              <div className={`h-5 w-5 rounded-lg border-2 flex items-center justify-center transition-all ${
+                                isChecked ? "border-violet-400 bg-violet-600" : "border-zinc-700 bg-black/40"
                               }`}>
-                                {isChecked && <span className="text-[8px] font-black">✓</span>}
+                                {isChecked && <span className="text-[10px] font-black text-white">✓</span>}
                               </div>
                             </button>
                           );
@@ -1022,17 +1022,17 @@ export default function HealthOnboarding() {
                         <button
                           type="button"
                           onClick={() => handleCheckboxChange("symptoms", "None")}
-                          className={`p-3.5 rounded-xl border text-left text-xs transition-all flex items-center justify-between cursor-pointer border-white/5 ${
+                          className={`p-4 rounded-xl border text-left text-sm font-bold transition-all flex items-center justify-between cursor-pointer col-span-1 sm:col-span-2 md:col-span-1 select-none ${
                             formData.symptoms.includes("None")
-                              ? "bg-emerald-600/15 border-emerald-500 text-white"
-                              : "bg-black/30 border-white/5 hover:border-white/10 text-zinc-300"
+                              ? "bg-emerald-600/25 border-emerald-500 text-white shadow-lg shadow-emerald-500/20 ring-1 ring-emerald-500/30"
+                              : "bg-black/50 border-white/10 hover:border-emerald-500/40 hover:bg-black/70 text-zinc-300"
                           }`}
                         >
-                          <span className="font-semibold">None of the above</span>
-                          <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center ${
-                            formData.symptoms.includes("None") ? "border-emerald-400 bg-emerald-600" : "border-zinc-700"
+                          <span className="tracking-wide">None of the above</span>
+                          <div className={`h-5 w-5 rounded-lg border-2 flex items-center justify-center transition-all ${
+                            formData.symptoms.includes("None") ? "border-emerald-400 bg-emerald-600" : "border-zinc-700 bg-black/40"
                           }`}>
-                            {formData.symptoms.includes("None") && <span className="text-[8px] font-black">✓</span>}
+                            {formData.symptoms.includes("None") && <span className="text-[10px] font-black text-white">✓</span>}
                           </div>
                         </button>
                       </div>
@@ -1041,10 +1041,10 @@ export default function HealthOnboarding() {
 
                   {/* SECTION 6: BLOOD REPORT UPLOAD */}
                   {currentStep === 6 && (
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                       <div>
-                        <h4 className="text-sm font-sans font-semibold text-white">Upload Clinical Laboratory Blood Reports:</h4>
-                        <p className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider mt-0.5">Allows our advanced model to extract exact biomarkers for diagnosis</p>
+                        <h4 className="text-lg font-display font-bold text-white tracking-wide">Upload Clinical Laboratory Blood Reports:</h4>
+                        <p className="text-xs md:text-sm text-zinc-400 font-mono tracking-wide mt-1.5">Allows our advanced model to extract exact biomarkers for diagnosis</p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1054,12 +1054,12 @@ export default function HealthOnboarding() {
                           { id: "lipid", title: "Lipid Profile (Cholesterol) Report" },
                           { id: "thyroid", title: "Thyroid Panel Report" }
                         ].map((report) => (
-                          <div key={report.id} className="p-4 bg-black/40 border border-white/5 rounded-2xl text-left space-y-2">
-                            <span className="text-[10px] font-mono text-zinc-400 font-extrabold uppercase block">{report.title}</span>
+                          <div key={report.id} className="p-5 bg-black/50 border border-white/10 rounded-2xl text-left space-y-3 shadow-lg shadow-violet-950/10">
+                            <span className="text-xs font-mono text-zinc-300 font-bold uppercase block tracking-wider">{report.title}</span>
                             
-                            <label className="flex items-center justify-center gap-2 p-3 bg-white/[0.02] hover:bg-white/[0.06] border border-dashed border-white/10 hover:border-violet-500/45 rounded-xl transition-all cursor-pointer">
-                              <Upload className="h-4 w-4 text-violet-400" />
-                              <span className="text-[11px] font-sans text-zinc-300 font-medium">Select File</span>
+                            <label className="flex items-center justify-center gap-2.5 p-3.5 bg-white/[0.01] hover:bg-white/[0.05] border border-dashed border-white/20 hover:border-violet-500 rounded-xl transition-all cursor-pointer">
+                              <Upload className="h-4.5 w-4.5 text-violet-400" />
+                              <span className="text-xs sm:text-sm font-sans text-zinc-200 font-semibold">Select Laboratory File</span>
                               <input 
                                 type="file" 
                                 accept="application/pdf,image/*" 
@@ -1073,34 +1073,34 @@ export default function HealthOnboarding() {
 
                       {/* Active files progress summary list */}
                       {formData.uploadedFiles.length > 0 && (
-                        <div className="space-y-2.5 pt-2 text-left">
-                          <span className="text-[9px] font-mono text-zinc-500 uppercase font-black block">Uploaded Documents Queue</span>
+                        <div className="space-y-3 pt-2 text-left">
+                          <span className="text-xs font-mono text-zinc-400 uppercase font-extrabold tracking-wide block">Uploaded Documents Queue</span>
                           
                           <div className="space-y-2">
                             {formData.uploadedFiles.map((f) => (
-                              <div key={f.name} className="p-3.5 bg-white/[0.01] border border-white/5 rounded-xl flex items-center justify-between gap-4">
+                              <div key={f.name} className="p-4 bg-white/[0.01] border border-white/10 rounded-xl flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-3 min-w-0">
-                                  <File className="h-4.5 w-4.5 text-violet-400 shrink-0" />
+                                  <File className="h-5 w-5 text-violet-400 shrink-0" />
                                   <div className="min-w-0">
-                                    <p className="text-xs text-white truncate font-medium">{f.name}</p>
-                                    <p className="text-[9px] text-zinc-500 uppercase font-mono font-bold mt-0.5">Category: {f.category.toUpperCase()}</p>
+                                    <p className="text-sm text-white truncate font-semibold">{f.name}</p>
+                                    <p className="text-xs text-zinc-400 uppercase font-mono font-extrabold mt-1">Category: {f.category.toUpperCase()}</p>
                                   </div>
                                 </div>
 
                                 <div className="flex items-center gap-4 shrink-0">
                                   {f.progress < 100 ? (
                                     <div className="flex items-center gap-2">
-                                      <Loader2 className="h-3.5 w-3.5 text-violet-400 animate-spin" />
-                                      <span className="text-[10px] font-mono text-violet-300">{f.progress}%</span>
+                                      <Loader2 className="h-4 w-4 text-violet-400 animate-spin" />
+                                      <span className="text-xs font-mono text-violet-300 font-bold">{f.progress}%</span>
                                     </div>
                                   ) : (
-                                    <span className="text-[10px] font-mono text-emerald-400 font-bold uppercase">Ready</span>
+                                    <span className="text-xs font-mono text-emerald-400 font-black uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">Ready</span>
                                   )}
                                   <button
                                     onClick={() => removeUploadedFile(f.name)}
-                                    className="p-1 rounded bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 transition-all"
+                                    className="p-1.5 rounded bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/10 hover:border-rose-500/20 text-rose-400 transition-all cursor-pointer"
                                   >
-                                    <Trash2 className="h-3.5 w-3.5" />
+                                    <Trash2 className="h-4 w-4" />
                                   </button>
                                 </div>
                               </div>
@@ -1120,9 +1120,9 @@ export default function HealthOnboarding() {
                   type="button"
                   onClick={handleBack}
                   disabled={currentStep === 1}
-                  className="px-5 py-2.5 text-xs rounded-full border border-white/10 hover:border-white/20 hover:bg-white/[0.04] text-zinc-300 transition-all font-mono font-bold flex items-center gap-1.5 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+                  className="px-6 py-3 text-sm rounded-full border border-white/10 hover:border-white/20 hover:bg-white/[0.04] text-zinc-300 transition-all font-mono font-bold flex items-center gap-1.5 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-4.5 w-4.5" />
                   PREVIOUS
                 </button>
 
@@ -1130,22 +1130,22 @@ export default function HealthOnboarding() {
                   type="button"
                   onClick={handleNext}
                   disabled={isAnalyzing}
-                  className="px-6 py-2.5 text-xs rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:brightness-110 active:scale-97 text-white shadow-lg shadow-violet-500/10 transition-all font-mono font-bold flex items-center gap-1.5 cursor-pointer"
+                  className="px-7 py-3 text-sm rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:brightness-110 active:scale-97 text-white shadow-lg shadow-violet-500/20 transition-all font-mono font-bold flex items-center gap-1.5 cursor-pointer"
                 >
                   {isAnalyzing ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-4.5 w-4.5 animate-spin" />
                       ANALYZING...
                     </>
                   ) : currentStep === 6 ? (
                     <>
                       COMPILE REPORT
-                      <Sparkles className="h-4 w-4 text-amber-300" />
+                      <Sparkles className="h-4.5 w-4.5 text-amber-300" />
                     </>
                   ) : (
                     <>
                       NEXT SECTION
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className="h-4.5 w-4.5" />
                     </>
                   )}
                 </button>
@@ -1165,7 +1165,7 @@ export default function HealthOnboarding() {
             <div className="flex justify-between items-center bg-white/[0.01] border border-white/5 p-4 rounded-2xl">
               <button
                 onClick={handleReset}
-                className="px-4 py-2 bg-white/5 text-zinc-300 hover:text-white border border-white/10 rounded-xl text-xs font-mono font-bold cursor-pointer hover:bg-white/10 transition-all"
+                className="px-5 py-2.5 bg-white/5 text-zinc-200 hover:text-white border border-white/10 rounded-xl text-sm font-sans font-bold cursor-pointer hover:bg-white/10 transition-all shadow-md"
               >
                 ← Take Test Again / Reset Answers
               </button>
@@ -1175,9 +1175,9 @@ export default function HealthOnboarding() {
                     playBeep(1100, 0.1);
                     window.print();
                   }}
-                  className="px-4 py-2 bg-violet-600/10 hover:bg-violet-600 text-violet-300 hover:text-white border border-violet-500/20 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                  className="px-5 py-2.5 bg-violet-600/10 hover:bg-violet-600 text-violet-300 hover:text-white border border-violet-500/20 rounded-xl text-sm font-sans font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
                 >
-                  <Download className="h-4 w-4" />
+                  <Download className="h-4.5 w-4.5" />
                   Download / Print EHR
                 </button>
               </div>
@@ -1193,7 +1193,7 @@ export default function HealthOnboarding() {
                 <div className="p-6 border border-white/10 bg-slate-950/80 rounded-3xl relative overflow-hidden flex flex-col items-center justify-center text-center shadow-lg backdrop-blur-2xl">
                   <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-violet-500/20 via-fuchsia-500/20 to-transparent" />
                   
-                  <span className="text-[9px] font-mono text-zinc-500 uppercase font-black tracking-widest block mb-4">PulsePoint Comprehensive health index</span>
+                  <span className="text-xs font-mono text-violet-400 uppercase font-bold tracking-wider block mb-4">PulsePoint Comprehensive health index</span>
                   
                   <div className="relative h-32 w-32 flex items-center justify-center">
                     {/* SVG Progress Circle Ring */}
@@ -1230,17 +1230,17 @@ export default function HealthOnboarding() {
                     {/* Centered raw score */}
                     <div className="absolute flex flex-col justify-center items-center">
                       <span className="text-3xl font-mono font-black text-white leading-none">{healthScore}</span>
-                      <span className="text-[10px] text-zinc-500 font-mono tracking-wider font-extrabold mt-1">/100 PTS</span>
+                      <span className="text-xs text-zinc-400 font-mono tracking-wider font-bold mt-1">/100 PTS</span>
                     </div>
                   </div>
 
-                  <div className="mt-4 p-3 bg-white/[0.02] border border-white/5 rounded-2xl text-[10px] font-sans text-zinc-300 max-w-xs leading-normal">
+                  <div className="mt-4 p-4 bg-white/[0.02] border border-white/5 rounded-2xl text-xs sm:text-sm font-sans text-zinc-300 max-w-sm leading-relaxed">
                     {healthScore >= 80 ? (
-                      <span className="text-emerald-400 font-semibold block">✓ Healthy Cardiovascular Baseline:</span>
+                      <span className="text-emerald-400 font-bold block text-sm mb-1">✓ Healthy Cardiovascular Baseline:</span>
                     ) : healthScore >= 55 ? (
-                      <span className="text-amber-400 font-semibold block">⚠️ Moderate Risk Detected:</span>
+                      <span className="text-amber-400 font-bold block text-sm mb-1">⚠️ Moderate Risk Detected:</span>
                     ) : (
-                      <span className="text-rose-400 font-semibold block">🚨 High Somatic Stress Indicators:</span>
+                      <span className="text-rose-400 font-bold block text-sm mb-1">🚨 High Somatic Stress Indicators:</span>
                     )}
                     <span>Sustain active lifestyle and physical metrics. Optimize your specific risks according to suggestions below.</span>
                   </div>
@@ -1250,8 +1250,8 @@ export default function HealthOnboarding() {
                 <div className="p-6 border border-white/10 bg-slate-950/80 rounded-3xl relative overflow-hidden text-left shadow-lg">
                   <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-red-500/20 via-violet-500/20 to-transparent" />
                   
-                  <h4 className="text-xs uppercase font-mono tracking-widest font-extrabold text-zinc-300 block mb-4 flex items-center gap-1.5 col-span-2">
-                    <ShieldCheck className="h-4 w-4 text-[#f1edd3]" />
+                  <h4 className="text-sm uppercase font-mono tracking-wider font-bold text-violet-300 block mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
+                    <ShieldCheck className="h-5 w-5 text-violet-400" />
                     Somatic Chronic Disease Risk Levels
                   </h4>
 
@@ -1266,16 +1266,16 @@ export default function HealthOnboarding() {
                       const levelColor = m.level === "High" ? "text-rose-400 bg-rose-500/10 border-rose-500/20" : m.level === "Medium" ? "text-amber-400 bg-amber-500/10 border-amber-500/20" : "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
                       
                       return (
-                        <div key={m.key} className="space-y-1.5 text-left">
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="text-zinc-300 font-medium">{m.title}</span>
-                            <span className={`text-[9px] font-mono font-extrabold uppercase px-2 py-0.5 rounded border ${levelColor}`}>
+                        <div key={m.key} className="space-y-2 text-left">
+                          <div className="flex justify-between items-center">
+                            <span className="text-zinc-200 font-semibold text-sm sm:text-base">{m.title}</span>
+                            <span className={`text-xs font-mono font-bold uppercase px-3 py-1 rounded-lg border ${levelColor}`}>
                               {m.level}
                             </span>
                           </div>
                           
                           {/* Meter line progress */}
-                          <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                          <div className="w-full bg-white/5 h-2.5 rounded-full overflow-hidden">
                             <div 
                               className={`h-full rounded-full transition-all duration-1000 ${
                                 m.level === "High" 
@@ -1307,40 +1307,40 @@ export default function HealthOnboarding() {
                   >
                     <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-sky-400/30 to-transparent" />
                     
-                    <div className="flex items-center gap-2 mb-4">
-                      <Sparkles className="h-4.5 w-4.5 text-sky-400 animate-spin" />
-                      <h4 className="text-xs uppercase font-mono tracking-widest font-extrabold text-sky-300 block">
+                    <div className="flex items-center gap-2 mb-4 border-b border-sky-950/40 pb-2">
+                       <Sparkles className="h-5 w-5 text-sky-400 animate-pulse" />
+                      <h4 className="text-sm uppercase font-mono tracking-wider font-bold text-sky-300 block">
                         Labs Extraction telemetry values
                       </h4>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                       <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
-                        <span className="text-[9px] font-mono text-zinc-500 uppercase font-black block">Parsed Plasma Glycemia</span>
-                        <span className="text-white font-medium block mt-1">{extractedValues.bloodSugar}</span>
+                        <span className="text-xs font-mono text-zinc-400 uppercase font-bold block">Parsed Plasma Glycemia</span>
+                        <span className="text-sm font-semibold block mt-1.5 text-zinc-200">{extractedValues.bloodSugar}</span>
                       </div>
                       
                       <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
-                        <span className="text-[9px] font-mono text-zinc-500 uppercase font-black block">Circulating Cholesterol</span>
-                        <span className="text-white font-medium block mt-1">{extractedValues.cholesterol}</span>
+                        <span className="text-xs font-mono text-zinc-400 uppercase font-bold block">Circulating Cholesterol</span>
+                        <span className="text-sm font-semibold block mt-1.5 text-zinc-200">{extractedValues.cholesterol}</span>
                       </div>
 
                       <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
-                        <span className="text-[9px] font-mono text-zinc-500 uppercase font-black block">Absolute Hemoglobin</span>
-                        <span className="text-white font-medium block mt-1">{extractedValues.hemoglobin}</span>
+                        <span className="text-xs font-mono text-zinc-400 uppercase font-bold block">Absolute Hemoglobin</span>
+                        <span className="text-sm font-semibold block mt-1.5 text-zinc-200">{extractedValues.hemoglobin}</span>
                       </div>
 
                       <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
-                        <span className="text-[9px] font-mono text-zinc-500 uppercase font-black block">Thyrotropin Thyroid Panel</span>
-                        <span className="text-white font-medium block mt-1">{extractedValues.thyroid}</span>
+                        <span className="text-xs font-mono text-zinc-400 uppercase font-bold block">Thyrotropin Thyroid Panel</span>
+                        <span className="text-sm font-semibold block mt-1.5 text-zinc-200">{extractedValues.thyroid}</span>
                       </div>
                     </div>
 
                     {/* Anomalous findings markers block */}
                     {extractedValues.abnormalParameters.length > 0 && (
-                      <div className="mt-4 p-3 bg-amber-950/20 border border-amber-500/10 text-amber-300 rounded-2xl text-[11px] space-y-1 text-left">
-                        <span className="text-[9px] font-mono uppercase tracking-wider block font-bold text-amber-400">🚨 Primary Biomarker Anomalies Detected:</span>
-                        <ul className="list-disc pl-4 text-zinc-300 space-y-0.5">
+                      <div className="mt-5 p-4 bg-rose-950/20 border border-rose-500/20 text-rose-300 rounded-2xl text-xs sm:text-sm space-y-2 text-left shadow-lg">
+                        <span className="text-xs font-mono uppercase tracking-wide block font-extrabold text-rose-400">🚨 Primary Biomarker Anomalies Detected:</span>
+                        <ul className="list-disc pl-5 text-zinc-300 space-y-1 mt-1">
                           {extractedValues.abnormalParameters.map((a, idx) => (
                             <li key={idx}><strong>{a}</strong></li>
                           ))}
@@ -1354,9 +1354,9 @@ export default function HealthOnboarding() {
                 <div className="p-6 border border-white/10 bg-slate-950/80 rounded-3xl relative overflow-hidden text-left shadow-lg">
                   <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-violet-500/20 via-fuchsia-500/20 to-transparent" />
                   
-                  <div className="flex items-center gap-2 mb-4">
-                    <Sparkles className="h-4.5 w-4.5 text-violet-400 animate-pulse" />
-                    <h4 className="text-xs uppercase font-mono tracking-widest font-extrabold text-zinc-300 block">
+                  <div className="flex items-center gap-2 mb-4 border-b border-white/5 pb-2">
+                    <Sparkles className="h-5 w-5 text-violet-400 animate-pulse" />
+                    <h4 className="text-sm uppercase font-mono tracking-wider font-bold text-violet-300 block">
                       Targeted Adaptive AI Clinic Suggestions
                     </h4>
                   </div>
@@ -1364,17 +1364,17 @@ export default function HealthOnboarding() {
                   <div className="space-y-3">
                     {aiSuggestions.map((sug, idx) => {
                       return (
-                        <div key={idx} className="flex items-start gap-3 p-3 bg-black/30 border border-white/5 rounded-xl">
-                          <CheckCircle className="h-4.5 w-4.5 text-emerald-400 shrink-0 mt-0.5" />
-                          <span className="text-xs text-zinc-300 block leading-relaxed">{sug}</span>
+                        <div key={idx} className="flex items-start gap-3 p-3.5 bg-black/30 border border-white/5 rounded-xl">
+                          <CheckCircle className="h-5 w-5 text-emerald-400 shrink-0 mt-0.5" />
+                          <span className="text-sm text-zinc-200 block leading-relaxed">{sug}</span>
                         </div>
                       );
                     })}
                   </div>
 
                   {/* HIPAA compliance disclaimer note footer */}
-                  <div className="mt-6 pt-5 border-t border-white/5 flex gap-2.5 text-[10px] font-sans text-zinc-500 leading-normal">
-                    <ShieldCheck className="h-4 w-4 text-emerald-400/60 shrink-0" />
+                  <div className="mt-6 pt-5 border-t border-white/5 flex gap-3 text-xs font-sans text-zinc-400 leading-relaxed">
+                    <ShieldCheck className="h-5 w-5 text-emerald-400/80 shrink-0" />
                     <span><b>HIPAA Encrypted Patient Record Notification:</b> All diagnostic outcomes, biometric indicators, and custom reports are retained inside client-side isolated sandbox arrays. No corporate vendor synchronization will occur without explicit OAuth validation.</span>
                   </div>
                 </div>

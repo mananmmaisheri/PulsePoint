@@ -1,5 +1,6 @@
 import { useState, useEffect, FormEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import HealthOnboarding from "./HealthOnboarding";
 import { 
   User, Lock, Mail, ShieldCheck, FileCheck, LogOut, Download, Plus, 
   Trash2, Key, AlertTriangle, Fingerprint, RefreshCcw, CreditCard, 
@@ -49,6 +50,19 @@ export default function UserProfile({ user, onAuthChange, setTab }: UserProfileP
   const [editEmergencyPhone, setEditEmergencyPhone] = useState("");
   const [showIdCard, setShowIdCard] = useState(true);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // High-fidelity onboarding question redirection state
+  const [showQuestions, setShowQuestions] = useState(false);
+
+  // Detect and auto-launch questions for fresh user sessions
+  useEffect(() => {
+    if (user) {
+      const completedOnboarding = localStorage.getItem("pulsepoint_onboarding_answers");
+      if (!completedOnboarding) {
+        setShowQuestions(true);
+      }
+    }
+  }, [user]);
 
   // Sound feedback
   const playBeep = (freq = 800, duration = 0.08) => {
@@ -132,6 +146,11 @@ export default function UserProfile({ user, onAuthChange, setTab }: UserProfileP
       onAuthChange(provisionedUser);
       setIsSubmitting(false);
       playBeep(1100, 0.15);
+
+      const completedOnboarding = localStorage.getItem("pulsepoint_onboarding_answers");
+      if (!completedOnboarding) {
+        setShowQuestions(true);
+      }
     }, 900);
   };
 
@@ -158,6 +177,11 @@ export default function UserProfile({ user, onAuthChange, setTab }: UserProfileP
       onAuthChange(guestUser);
       setIsSubmitting(false);
       playBeep(1200, 0.12);
+
+      const completedOnboarding = localStorage.getItem("pulsepoint_onboarding_answers");
+      if (!completedOnboarding) {
+        setShowQuestions(true);
+      }
     }, 400);
   };
 
@@ -194,6 +218,7 @@ export default function UserProfile({ user, onAuthChange, setTab }: UserProfileP
     playBeep(600, 0.2);
     localStorage.removeItem("pulsepoint_user");
     onAuthChange(null);
+    setShowQuestions(false);
     setTab("home");
   };
 
@@ -414,6 +439,30 @@ export default function UserProfile({ user, onAuthChange, setTab }: UserProfileP
               </div>
             </div>
           </motion.div>
+        ) : showQuestions ? (
+          /* ==================== SCREEN C: ONBOARDING CLINICAL QUESTIONS ==================== */
+          <motion.div
+            key="profile-onboarding-wizard"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            className="w-full text-left bg-transparent"
+          >
+            <div className="flex justify-between items-center mb-6 max-w-4xl mx-auto px-4">
+              <button
+                onClick={() => {
+                  playBeep(700, 0.05);
+                  setShowQuestions(false);
+                }}
+                className="px-4 py-2 bg-white/5 text-zinc-300 hover:text-white border border-white/10 rounded-xl text-xs font-mono font-bold cursor-pointer hover:bg-white/10 transition-all flex items-center gap-1.5"
+              >
+                ← Back to Profile Dashboard
+              </button>
+              <span className="text-xs text-zinc-500 font-mono tracking-widest uppercase">ONBOARDING ASSESSMENT WORKSPACE</span>
+            </div>
+            
+            <HealthOnboarding />
+          </motion.div>
         ) : (
           /* ==================== SCREEN B: EHR PROFILE DASHBOARD ==================== */
           <motion.div
@@ -569,7 +618,48 @@ export default function UserProfile({ user, onAuthChange, setTab }: UserProfileP
             </div>
 
             {/* Right Box: Editable Biometric baselines, known conditions & ICE profiles */}
-            <div className="lg:col-span-7">
+            <div className="lg:col-span-7 space-y-6">
+              
+              {/* Precision Onboarding Questions CTA Card */}
+              <div className="p-6 border border-violet-500/30 bg-gradient-to-br from-[#0c0825]/90 to-slate-950/90 rounded-3xl shadow-xl backdrop-blur-2xl relative overflow-hidden text-left">
+                <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-violet-500 via-fuchsia-500 to-transparent animate-pulse" />
+                
+                <div className="flex items-start gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-violet-600/15 border border-violet-500/20 flex items-center justify-center shrink-0">
+                    <ClipboardList className="h-5 w-5 text-violet-400" />
+                  </div>
+                  <div className="text-left flex-1 space-y-1">
+                    <h4 className="text-sm font-semibold text-white">Chronic Risk Predictor Questions</h4>
+                    <p className="text-xs text-zinc-400 leading-normal">
+                      {localStorage.getItem("pulsepoint_onboarding_answers") 
+                        ? "You have completed the 6-section precision diagnostic! Feel free to retake it to re-evaluate your cardiovascular and diabetes scores."
+                        : "Complete our interactive 6-section clinical questionnaire and report scanner to calibrate your real-time risk scores."}
+                    </p>
+                    
+                    <div className="pt-3.5 flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          playBeep(1100, 0.1);
+                          setShowQuestions(true);
+                        }}
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:brightness-110 text-white font-mono font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer shadow-lg active:scale-97"
+                      >
+                        {localStorage.getItem("pulsepoint_onboarding_answers") 
+                          ? "Retake Assessment Questions" 
+                          : "Start Diagnostic Questions ➜"}
+                      </button>
+                      
+                      {localStorage.getItem("pulsepoint_onboarding_answers") && (
+                        <span className="text-[9px] font-mono font-black text-emerald-400 uppercase bg-emerald-950/40 border border-emerald-800/40 px-2.5 py-1 rounded">
+                          ✓ Completed & Passed
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="p-6 md:p-8 border border-white/10 bg-slate-950/80 rounded-3xl shadow-xl backdrop-blur-2xl relative overflow-hidden">
                 <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-violet-500/20 to-transparent" />
                 

@@ -102,3 +102,46 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
+
+/* Moving Border Glow Animation for PulsePoint AI themed colors */
+@keyframes gradient-border-slide {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.moving-border-container {
+  position: relative;
+  background: linear-gradient(90deg, #f472b6, #a855f7, #6366f1, #3b82f6, #f472b6); /* Pink, Purple, Violet, Blue */
+  background-size: 200% auto;
+  animation: gradient-border-slide 3.5s linear infinite;
+  display: flex;
+}
+
+.moving-border-container-pulse {
+  position: relative;
+  background: linear-gradient(90deg, #ec4899, #a855f7, #6366f1, #3b82f6, #ec4899);
+  background-size: 200% auto;
+  animation: gradient-border-slide 2.5s linear infinite;
+}
+
+/* Subtle breathing glow to elements */
+@keyframes breathing-glow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(236, 72, 153, 0.35), 0 0 35px rgba(59, 130, 246, 0.25);
+  }
+}
+
+.breathing-glow-box {
+  animation: breathing-glow 4s infinite ease-in-out;
+}
+
