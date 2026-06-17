@@ -122,6 +122,8 @@ export default function AISmartAssistant() {
   const [attachedFileType, setAttachedFileType] = useState("");
   const [isTriageCollapsed, setIsTriageCollapsed] = useState(false); // Controls triage reports rendering below "if needed"
   const [shownTriageOnce, setShownTriageOnce] = useState(true); // Flag to show cockpit on request or automatically
+  const [activeMainSection, setActiveMainSection] = useState<"chat" | "triage">("chat"); // Toggleable section inside chatbot
+  const [hasNewTriage, setHasNewTriage] = useState(false); // Visual badge indicator for newly updated clinical triage report
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
 
@@ -299,6 +301,25 @@ export default function AISmartAssistant() {
     localStorage.setItem("pulsepoint_chats", JSON.stringify(messages));
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Handle automatic notifications for newly updated clinical triage reports
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg.role === "model") {
+        try {
+          const parsed = JSON.parse(lastMsg.content);
+          if (parsed && parsed.triage) {
+            if (activeMainSection !== "triage") {
+              setHasNewTriage(true);
+            }
+          }
+        } catch {
+          // non-structured message, ignore
+        }
+      }
+    }
+  }, [messages, activeMainSection]);
 
   useEffect(() => {
     fetch("/api/config")
@@ -576,53 +597,75 @@ export default function AISmartAssistant() {
   };
 
   return (
-    <div className="w-full flex-1 flex flex-col max-w-7xl mx-auto px-2 md:px-4 py-2 gap-4 relative lg:h-full lg:overflow-hidden overflow-y-auto" id="chat-assistant">
+    <div className="w-full flex-1 flex flex-col max-w-7xl mx-auto px-1 md:px-2 py-1 gap-1.5 md:gap-2.5 relative h-full overflow-hidden" id="chat-assistant">
       
-      {/* 1. Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4">
+      {/* 1. Header Banner - Compact Version */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/5 pb-2">
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="h-14 w-14 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="h-10 w-10 rounded-xl bg-slate-900 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
               <img 
                 src="https://lh3.googleusercontent.com/d/1BFhwv5CYYqqOtHIMy-YIZhOoHHVJSCLS" 
                 alt="PulsePoint AI Logo" 
-                className="h-12 w-12 object-contain"
+                className="h-8 w-8 object-contain"
                 referrerPolicy="no-referrer"
               />
             </div>
             <div>
-              <h1 className="text-lg md:text-xl font-display font-medium text-[#f2f1ef] tracking-tight flex items-center gap-2">
+              <h1 className="text-base md:text-lg font-display font-medium text-[#f2f1ef] tracking-tight flex items-center gap-1.5 leading-tight">
                 PulsePoint <span className="bg-gradient-to-r from-violet-400 to-indigo-300 bg-clip-text text-transparent font-semibold">AI Assistant</span>
               </h1>
-              <p className="text-[11px] text-foreground/45">
+              <p className="text-[10px] text-foreground/45 leading-none mt-0.5">
                 Clinical-grade Indian triage & traditional wellness intelligence.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-start md:self-auto">
-          <button
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          {/* 🚨 Redesigned Aesthetic Manual SOS Emergency Trigger with Custom Heartbeat Waves */}
+          <motion.button
+            whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(239, 68, 68, 0.55)" }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => {
               setIsSosModalOpen(true);
               setSosStatus("triggered");
             }}
-            className="flex items-center gap-1.5 text-xs text-red-200 hover:text-white bg-red-950/60 border border-red-700/50 hover:bg-red-900/80 px-3 py-1.5 rounded-full transition-all cursor-pointer select-none font-bold animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.3)] text-[10px]"
+            className="group relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-mono font-bold tracking-wider text-white bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-rose-500 hover:to-red-500 border border-red-500/40 cursor-pointer select-none overflow-hidden transition-all duration-300 shadow-[0_0_15px_rgba(239,68,68,0.3)]"
           >
-            <ShieldAlert className="h-3.5 w-3.5 text-red-400" />
-            MANUAL SOS
-          </button>
-          <span className="text-[9px] uppercase font-mono tracking-wider text-emerald-400 bg-emerald-950/45 border border-emerald-900/40 px-2.5 py-1 rounded-full flex items-center gap-1.5 font-bold">
-            <span className="h-1.5 w-1.5 bg-emerald-400 rounded-full animate-ping" />
-            STANDBY READY
-          </span>
-          <button
+            <span className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <ShieldAlert className="h-3.5 w-3.5 text-white animate-bounce shrink-0" />
+            <span>MANUAL SOS</span>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-200"></span>
+            </span>
+          </motion.button>
+
+          {/* 🌿 Redesigned High-Tech Standby Status Badge */}
+          <motion.div
+            initial={{ opacity: 0.8 }}
+            animate={{ opacity: [0.8, 1, 0.8] }}
+            transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-[9px] font-mono font-black tracking-widest text-emerald-300 bg-emerald-950/40 border border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.12)] selection:none select-none"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+            </span>
+            <span>STANDBY READY</span>
+          </motion.div>
+
+          {/* 🛡️ Redesigned Futuristic Clear Chat Interactive Button */}
+          <motion.button
+            whileHover={{ scale: 1.05, backgroundColor: "rgba(244, 63, 94, 0.12)" }}
+            whileTap={{ scale: 0.95 }}
             onClick={clearChat}
-            className="flex items-center gap-1.5 text-xs text-rose-300 hover:text-rose-400 bg-rose-950/20 border border-rose-900/40 hover:bg-rose-950/40 px-3 py-1.5 rounded-full transition-all cursor-pointer select-none font-semibold text-[10px]"
+            className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-mono font-semibold text-rose-300 hover:text-white bg-rose-950/20 hover:bg-rose-900/10 border border-rose-500/35 hover:border-rose-400 cursor-pointer select-none transition-all duration-300 shadow-[0_0_10px_rgba(244,63,94,0.05)]"
           >
-            <Trash2 className="h-3.5 w-3.5" />
-            Clear Chat
-          </button>
+            <Trash2 className="h-3.5 w-3.5 text-rose-400 group-hover:rotate-12 group-hover:scale-110 transition-all duration-300 shrink-0" />
+            <span>Clear Chat</span>
+          </motion.button>
         </div>
       </div>
 
@@ -644,56 +687,111 @@ export default function AISmartAssistant() {
       )}
 
       {/* 2. Main Workspace split layout */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0 lg:overflow-hidden w-full">
+      <div className="flex-1 flex flex-col lg:flex-row gap-3 min-h-0 overflow-hidden w-full">
         
-        {/* Left Side: Standard Chat box Column with animated PulsePoint moving border light */}
-        <div className="flex-1 flex flex-col moving-border-container p-[1.5px] rounded-3xl shadow-2xl relative min-h-0 h-full breathing-glow-box">
-          <div className="flex-1 flex flex-col bg-[#070414] rounded-[22.5px] overflow-hidden relative min-h-0 h-full">
+        {/* Left Side: Standard Chat box Column - Maximized, sharp alignment, glowing only around the text bar at the bottom */}
+        <div className="flex-1 flex flex-col bg-[#070414]/95 border border-white/5 rounded-2xl relative min-h-0 h-full overflow-hidden">
+         
+         {/* Interactive Workspace Tab Header (Only shown if messages exist to ensure clean empty-state greeting) */}
+         {messages.length > 0 && (
+           <div className="flex items-center justify-between border-b border-white/5 bg-[#050212] px-4 py-2 shrink-0">
+             <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-full border border-white/5">
+               <button
+                 onClick={() => setActiveMainSection("chat")}
+                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer select-none ${
+                   activeMainSection === "chat"
+                     ? "bg-gradient-to-r from-pink-500/20 to-purple-600/20 text-pink-300 border border-pink-500/30 font-extrabold shadow-md shadow-pink-500/5"
+                     : "text-zinc-400 hover:text-white"
+                 }`}
+               >
+                 <Sparkles className="h-3.5 w-3.5 text-pink-400" />
+                 Interactive Chat
+               </button>
+               <button
+                 onClick={() => {
+                   setActiveMainSection("triage");
+                   setHasNewTriage(false);
+                 }}
+                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer select-none relative ${
+                   activeMainSection === "triage"
+                     ? "bg-gradient-to-r from-purple-500/20 to-indigo-600/20 text-purple-300 border border-purple-500/30 font-extrabold shadow-md shadow-purple-500/5"
+                     : "text-zinc-400 hover:text-white"
+                 }`}
+               >
+                 <HeartPulse className={`h-3.5 w-3.5 ${activeTriage.stage === "red" ? "text-rose-500 animate-pulse" : activeTriage.stage === "yellow" ? "text-amber-400" : "text-emerald-400"}`} />
+                 Triage Diagnosis
+                 
+                 {hasNewTriage && (
+                   <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                     <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                   </span>
+                 )}
+               </button>
+             </div>
+
+             {/* Stage microindicator widget */}
+             <div className="hidden sm:flex items-center gap-2">
+               <div className={`px-2.5 py-0.5 rounded-md text-[9px] font-mono font-bold border uppercase tracking-wider flex items-center gap-1.5 ${
+                 activeTriage.stage === "red" 
+                   ? "bg-rose-950/25 text-rose-400 border-rose-500/20" 
+                   : activeTriage.stage === "yellow" 
+                     ? "bg-amber-950/25 text-amber-400 border-amber-500/20" 
+                     : "bg-emerald-950/25 text-emerald-400 border-emerald-500/20"
+               }`}>
+                 <span className={`h-1.5 w-1.5 rounded-full ${
+                   activeTriage.stage === "red" ? "bg-rose-400 animate-pulse" : activeTriage.stage === "yellow" ? "bg-amber-400" : "bg-emerald-400"
+                 }`} />
+                 {activeTriage.chronicDisease} ({activeTriage.percentage}%)
+               </div>
+             </div>
+           </div>
+         )}
          
          {/* If chat has only initial model message, show welcome splash + presets */}
          {messages.length === 0 && (
-           <div className="p-6 md:p-8 flex-1 flex flex-col items-center justify-center text-center space-y-6 max-w-2xl mx-auto my-auto overflow-y-auto w-full">
+           <div className="p-3.5 md:p-6 flex-1 flex flex-col items-center justify-center text-center space-y-3.5 max-w-2xl mx-auto my-auto overflow-y-auto w-full">
              <div className="relative">
-               <div className="absolute inset-x-0 top-0 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-500 rounded-full blur-3xl opacity-20 animate-pulse h-16 w-16 mx-auto" />
-               <div className="relative h-16 w-16 mx-auto rounded-2xl bg-zinc-950 flex items-center justify-center border border-white/10 shadow-2xl overflow-hidden shrink-0">
+               <div className="absolute inset-x-0 top-0 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-500 rounded-full blur-3xl opacity-20 animate-pulse h-12 w-12 mx-auto" />
+               <div className="relative h-12 w-12 mx-auto rounded-xl bg-zinc-950 flex items-center justify-center border border-white/10 shadow-lg overflow-hidden shrink-0">
                  <img 
                    src="https://lh3.googleusercontent.com/d/1BFhwv5CYYqqOtHIMy-YIZhOoHHVJSCLS" 
                    alt="PulsePoint AI Logo" 
-                   className="h-14 w-14 object-contain"
+                   className="h-10 w-10 object-contain"
                    referrerPolicy="no-referrer"
                  />
                </div>
              </div>
 
-             <div className="space-y-3">
-               <h2 className="text-3xl md:text-4xl font-display font-medium tracking-tight text-white">
+             <div className="space-y-1">
+               <h2 className="text-2xl md:text-3xl font-display font-medium tracking-tight text-white leading-tight">
                  Hello, <span className="bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent font-bold">Manan</span>
                </h2>
-               <h3 className="text-lg md:text-xl font-sans font-medium text-zinc-400 leading-normal max-w-lg mx-auto">
+               <h3 className="text-xs md:text-sm font-sans font-medium text-zinc-400 leading-normal max-w-lg mx-auto">
                  How can PulsePoint assist your wellness journey today?
                </h3>
              </div>
 
              {/* Quick Presets Section */}
-             <div className="w-full space-y-4 pt-4">
-               <h4 className="text-[10px] font-mono tracking-widest font-black text-violet-400 uppercase flex items-center justify-center gap-1.5">
-                 <Sparkles className="h-3.5 w-3.5 text-pink-400" />
+             <div className="w-full space-y-2 pt-1">
+               <h4 className="text-[9px] font-mono tracking-widest font-black text-violet-400 uppercase flex items-center justify-center gap-1">
+                 <Sparkles className="h-3 w-3 text-pink-400 animate-pulse" />
                  Somatic Triage Floating Suggestions
                </h4>
                
-               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-left">
+               <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 text-left">
                  {SUGGESTIONS.map((preset, pIdx) => (
                    <button
                      key={pIdx}
                      onClick={() => handleSend(preset.prompt)}
                      disabled={loading}
-                     className="p-3 bg-black/60 hover:bg-gradient-to-br hover:from-purple-950/20 hover:to-zinc-950 border border-white/5 hover:border-violet-500/30 rounded-xl transition-all cursor-pointer text-left flex flex-col justify-between group active:scale-[0.98] shadow-md h-[105px]"
+                     className="p-2.5 bg-black/60 hover:bg-gradient-to-br hover:from-purple-950/20 hover:to-zinc-950 border border-white/5 hover:border-violet-500/30 rounded-xl transition-all cursor-pointer text-left flex flex-col justify-between group active:scale-[0.98] shadow-md h-[84px] md:h-[92px]"
                    >
-                     <span className="text-[11px] font-bold text-zinc-100 group-hover:text-purple-300 transition-colors flex items-center gap-1">
-                       <Sparkles className="h-3 w-3 text-pink-400" />
+                     <span className="text-[10px] font-bold text-zinc-100 group-hover:text-purple-300 transition-colors flex items-center gap-1">
+                       <Sparkles className="h-2.5 w-2.5 text-pink-400" />
                        {preset.label}
                      </span>
-                     <p className="text-[10px] text-zinc-500 group-hover:text-zinc-400 mt-1 line-clamp-3 leading-relaxed transition-colors">
+                     <p className="text-[9px] text-zinc-500 group-hover:text-zinc-400 mt-0.5 line-clamp-2 leading-tight transition-colors">
                        {preset.prompt}
                      </p>
                    </button>
@@ -745,7 +843,7 @@ export default function AISmartAssistant() {
          </AnimatePresence>
 
          {/* Thread conversational scroll content */}
-         {messages.length > 0 && (
+         {messages.length > 0 && activeMainSection === "chat" && (
            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5">
              {messages.map((m) => {
                const isUser = m.role === "user";
@@ -827,6 +925,306 @@ export default function AISmartAssistant() {
              <div ref={messagesEndRef} />
            </div>
          )}
+
+          {/* Triage Diagnosis Section (Only shown if messages exist and activeMainSection is triage) */}
+          {messages.length > 0 && activeMainSection === "triage" && (
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 flex flex-col bg-[#070414] text-left">
+              
+              {/* Clinical Dashboard Banner */}
+              <div className="bg-gradient-to-r from-[#170a2b] via-[#0c051f] to-[#04010b] border border-violet-500/10 p-5 rounded-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
+                <div className="absolute top-0 right-0 h-40 w-40 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+                <div className="space-y-1 text-center md:text-left z-10">
+                  <span className="text-[10px] font-mono font-semibold text-pink-400 tracking-widest uppercase bg-pink-500/10 px-2.5 py-0.5 rounded-full border border-pink-500/15">
+                    Clinical Triage Core
+                  </span>
+                  <h3 className="text-xl font-display font-black text-white tracking-tight mt-1">
+                    Somatic Diagnostics Dashboard
+                  </h3>
+                  <p className="text-xs text-zinc-400 leading-relaxed font-sans max-w-md">
+                    Suspected chronic condition: <span className="text-purple-300 font-semibold">{activeTriage.chronicDisease || "None selected"}</span> (Stage {activeTriage.stage.toUpperCase()})
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 z-10">
+                  <div className={`px-3 py-1.5 rounded-xl text-xs font-mono font-black border uppercase tracking-widest flex items-center gap-1.5 ${
+                    activeTriage.stage === "red" 
+                      ? "bg-rose-950/40 text-rose-400 border-rose-500/20" 
+                      : activeTriage.stage === "yellow" 
+                        ? "bg-amber-950/40 text-amber-400 border-amber-500/20" 
+                        : "bg-emerald-950/40 text-emerald-400 border-emerald-500/20"
+                  }`}>
+                    <span className={`h-2 w-2 rounded-full ${
+                      activeTriage.stage === "red" ? "bg-rose-400 animate-pulse" : activeTriage.stage === "yellow" ? "bg-amber-400" : "bg-emerald-400"
+                    }`} />
+                    CRITICALITY: {activeTriage.stage}
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Gauge representation */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                {/* Visual Circle Gauge gauge */}
+                <div className="lg:col-span-5 bg-zinc-950/40 border border-white/5 p-6 rounded-2xl flex flex-col items-center justify-center text-center space-y-4">
+                  <div className="relative h-28 w-28 flex items-center justify-center rounded-full bg-slate-950/70 border border-white/5 shadow-inner">
+                    <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                      <circle
+                        cx="56"
+                        cy="56"
+                        r="46"
+                        stroke="rgba(255, 255, 255, 0.03)"
+                        strokeWidth="8"
+                        fill="transparent"
+                      />
+                      <circle
+                        cx="56"
+                        cy="56"
+                        r="46"
+                        stroke={activeTriage.stage === "red" ? "#ef4444" : activeTriage.stage === "yellow" ? "#eab308" : "#10b981"}
+                        strokeWidth="8"
+                        fill="transparent"
+                        strokeDasharray="289"
+                        strokeDashoffset={289 - (289 * activeTriage.percentage) / 100}
+                        strokeLinecap="round"
+                        className="transition-all duration-1000 ease-out"
+                      />
+                    </svg>
+
+                    <div className="flex flex-col items-center z-10">
+                      <span className="text-2xl font-display font-black text-white tracking-tight">
+                        {activeTriage.percentage}%
+                      </span>
+                      <span className="text-[7px] font-mono font-bold tracking-widest text-zinc-500 uppercase mt-0.5">
+                        STAGE INDEX
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 text-center">
+                    {activeTriage.stage === "red" && (
+                      <>
+                        <h4 className="text-sm font-bold text-rose-500 font-mono tracking-wide">EMERGENCY PROTOCOL TRIGGERED</h4>
+                        <p className="text-[11px] text-zinc-400 leading-relaxed font-sans px-2">
+                          Vital symptoms require immediate medical care. Dispatch alerts or emergency services.
+                        </p>
+                      </>
+                    )}
+                    {activeTriage.stage === "yellow" && (
+                      <>
+                        <h4 className="text-sm font-bold text-amber-400 font-mono tracking-wide">PROFESSIONAL WORKUP ADVISED</h4>
+                        <p className="text-[11px] text-zinc-400 leading-relaxed font-sans px-2">
+                          Observe body metrics and consult family doctor. Review supportive remedies.
+                        </p>
+                      </>
+                    )}
+                    {activeTriage.stage === "green" && (
+                      <>
+                        <h4 className="text-sm font-bold text-emerald-400 font-mono tracking-wide">STABLE NON-CRITICAL STATE</h4>
+                        <p className="text-[11px] text-zinc-400 leading-relaxed font-sans px-2">
+                          Restore hydration, utilize somatic rest parameters, and apply routine wellness care.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Main Action Tabs remedies / diets */}
+                <div className="lg:col-span-7 flex flex-col bg-zinc-950/20 border border-white/5 p-5 rounded-2xl min-h-0">
+                  <div className="flex items-center justify-start gap-1 pb-2 border-b border-white/5 mb-4">
+                    <button
+                      onClick={() => setActiveTab2("remedies")}
+                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer select-none ${
+                        activeTab === "remedies" 
+                          ? "bg-violet-500/20 text-violet-300 border border-violet-500/30 font-black shadow-md shadow-violet-500/5" 
+                          : "text-zinc-400 hover:text-white"
+                      }`}
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Remedies & OTC
+                    </button>
+                    <button
+                      onClick={() => setActiveTab2("diet")}
+                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer select-none ${
+                        activeTab === "diet" 
+                          ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-black shadow-md shadow-indigo-500/5" 
+                          : "text-zinc-400 hover:text-white"
+                      }`}
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Diet Plan
+                    </button>
+                  </div>
+
+                  <AnimatePresence mode="wait">
+                    {activeTab === "remedies" && (
+                      <motion.div
+                        key="triage-tab-remedies"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        className="space-y-4 text-left font-sans flex-1"
+                      >
+                        <div className="bg-[#050212]/70 p-4 rounded-xl border border-white/5 space-y-1.5">
+                          <span className="text-[10px] font-bold text-violet-300 uppercase tracking-widest font-mono flex items-center gap-1.5 justify-start">
+                            🌿 TRADITIONAL HOME REMEDIES & KADHA
+                          </span>
+                          <p className="text-xs text-zinc-300 leading-relaxed font-sans">
+                            {activeTriage.remedies || "Drink light fluid herbal formulations, turmeric water, and stay warm in high-humidity ambient beds."}
+                          </p>
+                        </div>
+
+                        <div className="bg-[#050212]/70 p-4 rounded-xl border border-white/5 space-y-1.5">
+                          <span className="text-[10px] font-bold text-purple-300 uppercase tracking-widest font-mono flex items-center gap-1.5 justify-start">
+                            💊 INCLUSIVE MEDICINES & OTC GUIDANCE
+                          </span>
+                          <p className="text-xs text-zinc-300 leading-relaxed font-sans">
+                            {activeTriage.medicines || "Minor temporary symptomatic medications under parental guidance. Do not use random antibiotics."}
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {activeTab === "diet" && (
+                      <motion.div
+                        key="triage-tab-diet"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        className="space-y-4 text-left flex-1"
+                      >
+                        <div className="flex flex-wrap gap-1 bg-[#050212] p-1 rounded-xl border border-white/5 font-sans justify-start w-max">
+                          {[
+                            { key: "veg", label: "Vegan-Veg" },
+                            { key: "non_veg", label: "Non-Veg" },
+                            { key: "vegan", label: "Vegan" },
+                            { key: "keto", label: "Keto Plan" }
+                          ].map((dietOpt) => (
+                            <button
+                              key={dietOpt.key}
+                              onClick={() => setSelectedDietKey(dietOpt.key as any)}
+                              className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer select-none ${
+                                selectedDietKey === dietOpt.key 
+                                  ? "bg-violet-600 text-white font-extrabold shadow-sm"
+                                  : "text-zinc-500 hover:text-white hover:bg-white/5"
+                              }`}
+                            >
+                              {dietOpt.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="bg-[#050212]/70 p-4 rounded-xl border border-white/5 space-y-1.5">
+                          <span className="text-[10px] font-bold text-violet-300 uppercase tracking-widest font-mono block">
+                            INDIAN {selectedDietKey.replace('_', ' ').toUpperCase()} DIETARY REGIMEN
+                          </span>
+                          <p className="text-xs text-zinc-300 leading-relaxed font-sans">
+                            {activeTriage.diets?.[selectedDietKey] ?? "Light digestible fluid rich dietary schedules are prescribed for organic recovery."}
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+
+              {/* Dynamic Emergency SOS details or Clinical Specialist listings depending on Criticality state */}
+              {activeTriage.stage === "yellow" && activeTriage.doctors && (
+                <div className="border-t border-white/5 pt-6 space-y-4 text-left">
+                  <div className="flex items-center gap-1.5 justify-start">
+                    <span className="text-[10px] font-mono tracking-widest font-black text-amber-400 bg-amber-950/30 border border-amber-900/30 px-3 py-1 rounded-full uppercase flex items-center gap-2">
+                      <Calendar className="h-3.5 w-3.5 text-amber-400 animate-pulse" />
+                      Clinical Doctor Contact References
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {activeTriage.doctors.map((doc, dIdx) => (
+                      <div key={dIdx} className="bg-[#0b0821]/45 border border-white/5 p-4 rounded-2xl flex flex-col justify-between space-y-3 shadow-md hover:border-violet-500/20 transition-all">
+                        <div className="space-y-1.5">
+                          <div className="flex items-start justify-between gap-1">
+                            <h4 className="text-sm font-semibold text-white font-display leading-none">{doc.name}</h4>
+                            <span className="text-[8px] font-mono bg-violet-500/10 px-2 py-0.5 rounded text-violet-300 font-bold border border-violet-500/15">{doc.specialty}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-[10px] text-zinc-400 justify-start font-sans">
+                            <MapPin className="h-3 w-3 text-violet-400 shrink-0" />
+                            <p className="truncate">{doc.address}</p>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-white/5 flex items-center justify-between font-sans">
+                          <a 
+                            href={`tel:${doc.phone.replace(/\s+/g, '')}`} 
+                            className="text-[11px] text-[#29c470] hover:text-[#3dea88] transition-colors flex items-center gap-1.5 font-black"
+                          >
+                            <Phone className="h-3.5 w-3.5 text-emerald-400 animate-pulse" />
+                            {doc.phone}
+                          </a>
+                          <button className="text-[9px] font-mono text-zinc-300 bg-white/5 hover:bg-white/10 px-3 py-1 rounded-lg border border-transparent hover:border-white/10 flex items-center gap-1 cursor-pointer transition-all">
+                            Book Checkup
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeTriage.stage === "red" && (
+                <div className="border-t border-white/5 pt-6 space-y-5 text-left">
+                  <div className="bg-[#1c070c]/50 border border-rose-500/20 p-4.5 rounded-2xl text-left space-y-2 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 h-24 w-24 bg-rose-500/5 rounded-full blur-2xl pointer-events-none" />
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono text-rose-400 font-bold tracking-widest uppercase flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping" />
+                        SOS ALERT DISPATCH CASCADE ACTIVE
+                      </span>
+                      <span className="text-[9px] font-mono bg-rose-950 px-2.5 py-0.5 rounded border border-rose-500/30 text-rose-300 font-black">
+                        LIVE COORDINATES SIMULATED
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-300 leading-relaxed font-sans max-w-xl">
+                      Emergency clinical parameters triggered. Your location (Latitude 28.61, Longitude 77.20) has been dispatch-simulated to your local medical networks. Keep calm and sit in a comfortable resting posture.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Hotline Cards */}
+                    <div className="bg-zinc-950/40 border border-white/5 p-4.5 rounded-2xl flex flex-col justify-between space-y-3 shadow-md">
+                      <div>
+                        <span className="text-[9px] font-mono tracking-widest text-zinc-500 font-bold uppercase block mb-2">Direct Ambulance Dispatch</span>
+                        <div className="space-y-2">
+                          {activeTriage.emergency.ambulance.map((num, nId) => (
+                            <a
+                              key={nId}
+                              href={`tel:${num.split(' ')[0]}`}
+                              className="flex items-center gap-2.5 text-sm text-rose-400 hover:text-rose-300 transition-colors font-mono font-bold"
+                            >
+                              <Phone className="h-4 w-4 text-rose-500 shrink-0 animate-bounce" />
+                              {num}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-[9px] text-zinc-500 font-sans mt-2">Click hotlines above to place real direct Clinical Ambulance dispatch telephone connections.</p>
+                    </div>
+
+                    {/* Hospital Card */}
+                    <div className="bg-zinc-950/40 border border-white/5 p-4.5 rounded-2xl flex flex-col justify-between space-y-3 shadow-md">
+                      <div>
+                        <span className="text-[9px] font-mono tracking-widest text-zinc-500 font-bold uppercase block mb-1">Recommended Trauma Center</span>
+                        <h4 className="text-sm font-semibold text-white font-display leading-snug mt-1">
+                          {activeTriage.emergency.nearbyHospitals}
+                        </h4>
+                      </div>
+                      <span className="text-[9px] font-mono text-violet-300 flex items-center justify-center gap-2 bg-violet-950/30 border border-violet-900/40 px-3 py-1.5 rounded-xl w-max mt-2">
+                        <MapPin className="h-3.5 w-3.5 text-violet-400" /> Mapping Trauma Centers Near You
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          )}
 
          {/* pre-send attachment status bar tray */}
          {attachedFile && (
@@ -933,17 +1331,12 @@ export default function AISmartAssistant() {
              </div>
            </div>
            
-           {/* Small HIPAA Compliance Label below the input container */}
-           <p className="text-[10px] text-zinc-500 text-center select-none leading-relaxed font-sans max-w-lg mx-auto">
-             PulsePoint AI provides clinical triage and wellness plans. In acute crises, use the <span className="text-red-400 font-semibold uppercase">Manual SOS</span> emergency protocol.
-           </p>
          </div>
        </div>
-     </div>
 
         {/* Right Side: Conditional Diagnostic Report Column */}
         {messages.length > 0 && (
-          <div className="w-full lg:w-[380px] xl:w-[410px] shrink-0 flex flex-col bg-[#0b0821]/80 border border-white/10 rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 min-h-0 h-full" id="diagnostic-drawer">
+          <div className="hidden" id="diagnostic-drawer">
           
           {/* Diagnostic Header Trigger block */}
           <div 

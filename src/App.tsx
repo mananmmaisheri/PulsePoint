@@ -144,12 +144,12 @@ export default function App() {
           <Navbar currentTab={currentTab} setTab={setTab} user={user} />
 
           {/* Chat Assistant embedded inside beautiful transparent frosted layout card */}
-          <div className="relative z-10 flex-1 flex flex-col justify-center py-4 px-4 md:px-8 max-w-7xl mx-auto w-full h-[calc(100vh-80px)] overflow-hidden">
+          <div className="relative z-10 flex-1 flex flex-col justify-center py-2 md:py-3 px-2 md:px-6 max-w-7xl mx-auto w-full h-[calc(100vh-100px)] md:h-[calc(100vh-112px)] overflow-hidden">
             <motion.div
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
-              className="w-full bg-slate-950/80 border border-white/10 rounded-3xl p-1 md:p-4 shadow-2xl backdrop-blur-2xl flex-1 flex flex-col h-full overflow-hidden"
+              className="w-full bg-slate-950/80 border border-white/10 rounded-3xl p-1.5 md:p-2.5 shadow-2xl backdrop-blur-2xl flex-1 flex flex-col h-full overflow-hidden"
             >
               <div className="flex-1 flex flex-col overflow-hidden">
                 <AISmartAssistant />
