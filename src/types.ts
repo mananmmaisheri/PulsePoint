@@ -63,4 +63,5 @@ export interface HospitalResult {
   latitude?: number;
   longitude?: number;
   snippet?: string;
+  distance?: number;
 }

@@ -421,9 +421,10 @@ export default function AISmartAssistant() {
 
     if (!textToSend) setInput("");
 
-    // Look for emergency keywords (chest pain, breathing issues, severe bleeding, stroke, etc.)
-    const isEmergencyKeyword = /chest\s*pain|heart\s*attack|difficulty\s*breathing|shortness\s*of\s*breath|breathless|chok|bleed|unconscious|stroke|paraly|seiz|cardiac|heart\s*arrest|trauma|poison|accident|fracture|anaphylaxis|gasping|sos|emergency/i.test(text);
-    if (isEmergencyKeyword) {
+    // ONLY trigger immediate client-side SOS on direct explicit SOS commands (like "sos", "emergency button", etc.).
+    // Standard symptoms like "chest pain" or "heart pain" are now evaluated professionally by the AI clinical doctor to rule out gas attacks first before triggering the real SOS.
+    const isExplicitTrigger = /^(sos|emergency|trigger\s*sos|alert\s*ambulance)$/i.test(text);
+    if (isExplicitTrigger) {
       setSosStatus("triggered");
       setIsSosModalOpen(true);
     }
@@ -453,6 +454,8 @@ export default function AISmartAssistant() {
             const txt = getMessageText(m.content);
             return { role: m.role, content: txt };
           }),
+          latitude: userLocation.lat,
+          longitude: userLocation.lng,
         }),
       });
 

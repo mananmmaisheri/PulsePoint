@@ -75,6 +75,7 @@ export default function HospitalLocator() {
             latitude: chunk.maps?.latLng?.latitude,
             longitude: chunk.maps?.latLng?.longitude,
             snippet: "Live Clinical Center matching active inquiry standards.",
+            distance: chunk.maps?.distance,
           };
         });
         setResults(parsed);
@@ -323,10 +324,17 @@ export default function HospitalLocator() {
                         : "bg-white/[0.02] border-white/5 hover:border-violet-500/20 hover:bg-white/[0.04]"
                     }`}
                   >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="font-bold text-white text-sm tracking-tight">{result.title}</h4>
-                        {result.address && <p className="text-foreground/40 mt-1 font-mono">{result.address}</p>}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between gap-1">
+                          <h4 className="font-bold text-white text-sm tracking-tight leading-snug">{result.title}</h4>
+                          {result.distance !== undefined && (
+                            <span className="text-[10px] bg-emerald-500/10 text-emerald-300 font-mono font-medium px-2 py-0.5 rounded-full shrink-0">
+                              ~{result.distance.toFixed(1)} km away
+                            </span>
+                          )}
+                        </div>
+                        {result.address && <p className="text-foreground/45 mt-1.5 font-mono text-[11px] leading-relaxed break-words">{result.address}</p>}
                       </div>
                     </div>
 
