@@ -22,8 +22,8 @@ interface MarqueeFeature {
 export default function Marquee() {
   const features: MarqueeFeature[] = [
     { 
-      name: "Biosensor Wearable Cockpit", 
-      badge: "Realtime BPM", 
+      name: "Smart Medicine & Vitals Tracker", 
+      badge: "Meds & Vitals", 
       icon: <Activity className="h-4 w-4" />, 
       colorClass: "text-amber-400",
       badgeColorClass: "text-amber-300 bg-amber-950/40 border-amber-500/20"

@@ -67,13 +67,13 @@ export default function HomepageScrollSections({ setTab }: HomepageScrollSection
     },
     {
       icon: <Activity className="h-6 w-6 text-amber-400" />,
-      title: "Live Biosensor Cockpit",
-      description: "Synchronize wearable endpoints to map blood oxygen, continuous heart rate metrics, sound sleeps, hydration cycles, and daily activity metrics in one beautiful workspace.",
-      cta: "Explore Metrics",
+      title: "Smart Medicine & Vitals Tracker",
+      description: "Log daily prescriptions, configure active buzzer alarms for precise dosage times, find regional pharmacies open 24/7, and synchronize essential live health metrics.",
+      cta: "Explore Trackers",
       targetTab: "features",
       color: "from-amber-500/20 to-yellow-500/5",
       accent: "text-amber-400",
-      stats: "Realtime Local Caching"
+      stats: "Active Dosage Alarms"
     },
     {
       icon: <FileText className="h-6 w-6 text-emerald-400" />,
@@ -137,8 +137,8 @@ export default function HomepageScrollSections({ setTab }: HomepageScrollSection
           </p>
         </div>
 
-        {/* Dynamic staggered card grid with premium clinical-grade card designs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Dynamic staggered card grid with premium clinical-grade card designs in one row on desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feat, index) => (
             <motion.div
               key={feat.title}
@@ -254,7 +254,7 @@ export default function HomepageScrollSections({ setTab }: HomepageScrollSection
               onClick={() => setTab("features")}
               className="liquid-glass text-white font-medium hover:bg-white/5 border border-white/10 px-6 py-3 rounded-full text-xs transition-all tracking-wide flex items-center gap-2 cursor-pointer mt-4"
             >
-              Access Biosensors Dashboard
+              Access Medicine & Vitals Tracker
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </motion.div>

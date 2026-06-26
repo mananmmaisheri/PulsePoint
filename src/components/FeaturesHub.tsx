@@ -69,17 +69,17 @@ export default function FeaturesHub() {
   const cards: FeatureCard[] = [
     {
       id: "dashboard",
-      title: "Biosensor Cockpit",
-      category: "WEARABLE TELEMETRY",
-      shortDesc: "Real-time wearable telemetry and heart analytics calibrated to active patient profiles.",
-      longDesc: "Provides instant feedback of heart frequency (BPM), blood oxygen, fluid intake meters, and continuous vital logs with persistent secure state storage.",
+      title: "Smart Medicine & Vitals Tracker",
+      category: "MEDICATION & TELEMETRY",
+      shortDesc: "Real-time prescription tracking, active dosage alarms, and integrated biometric vitals sync.",
+      longDesc: "Synchronize connected physician prescriptions, manage daily dosages with automated alarm bells, locate nearby round-the-clock pharmacies, and monitor live body metrics in one cohesive terminal.",
       icon: <LayoutDashboard className="h-5 w-5" />,
       colorClass: "border-amber-500/30 text-amber-400 hover:border-amber-500/60",
       activeColorClass: "border-amber-500 bg-[#0e0a29]/80 shadow-amber-500/20 ring-amber-500/25",
       glowColor: "rgba(245, 158, 11, 0.2)",
       accentHex: "#f59e0b",
-      techStack: ["Wearable Sync", "Biometric Analytics", "Clinical Vital Logs"],
-      status: "Telemetry Active",
+      techStack: ["Rx Dosage Alarms", "Pharmacy Supply Maps", "Connected Biometrics"],
+      status: "Meds Engine Active",
       telemetryType: "bpm"
     },
     {
@@ -205,12 +205,12 @@ export default function FeaturesHub() {
               </div>
             </div>
 
-            {/* Bento Interactive Grid for exactly 6 cards */}
+            {/* Bento Interactive Grid for exactly 5 cards in one row on desktop */}
             <motion.div
               variants={staggerContainer}
               initial="hidden"
               animate="visible"
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"
             >
               {cards.map((card) => (
                 <motion.button
@@ -228,7 +228,7 @@ export default function FeaturesHub() {
                     transition: { duration: 0.2, ease: "easeOut" }
                   }}
                   whileTap={{ scale: 0.98 }}
-                  className="bg-black/60 hover:bg-black/85 border border-white/10 rounded-2xl p-6 text-left flex flex-col justify-between transition-all outline-none cursor-pointer relative overflow-hidden backdrop-blur-2xl min-h-[310px] group shadow-xl"
+                  className="bg-black/60 hover:bg-black/85 border border-white/10 rounded-2xl p-4 xl:p-5 text-left flex flex-col justify-between transition-all outline-none cursor-pointer relative overflow-hidden backdrop-blur-2xl min-h-[330px] group shadow-xl"
                 >
                   {/* Dynamic absolute color top header block line */}
                   <div

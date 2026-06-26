@@ -25,7 +25,9 @@ import {
   HelpCircle,
   Flame,
   Clock,
-  Eye
+  Eye,
+  RefreshCw,
+  Check
 } from "lucide-react";
 
 interface OnboardingData {
@@ -107,6 +109,38 @@ export default function HealthOnboarding() {
   });
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [extractedValues, setExtractedValues] = useState<ExtractionResult | null>(null);
+  const [completedSuggestions, setCompletedSuggestions] = useState<number[]>([]);
+
+  const toggleSuggestion = (idx: number) => {
+    playBeep(950, 0.05);
+    setCompletedSuggestions(prev => 
+      prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+    );
+  };
+
+  // Home diagnostic lab booking simulator states
+  const [bookingProvider, setBookingProvider] = useState("Healthians"); // Healthians, Clinico, Metropolis
+  const [bookingPackage, setBookingPackage] = useState("Comprehensive Health & Wellness Panel");
+  const [bookingSlot, setBookingSlot] = useState("");
+  const [bookingAddress, setBookingAddress] = useState("");
+  const [bookingPhone, setBookingPhone] = useState("");
+  const [isBookingSubmitting, setIsBookingSubmitting] = useState(false);
+  const [bookingCompleted, setBookingCompleted] = useState(false);
+  const [bookingSuccessId, setBookingSuccessId] = useState("");
+
+  const handleBookHomeTest = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bookingPhone || !bookingAddress || !bookingSlot) return;
+    setIsBookingSubmitting(true);
+    playBeep(900, 0.1);
+    setTimeout(() => {
+      setIsBookingSubmitting(false);
+      setBookingCompleted(true);
+      const randomId = "HB-" + Math.floor(100000 + Math.random() * 900000);
+      setBookingSuccessId(randomId);
+      playBeep(1300, 0.2);
+    }, 1500);
+  };
 
   // Sound feedback system
   const playBeep = (freq = 800, duration = 0.08) => {
@@ -455,22 +489,59 @@ export default function HealthOnboarding() {
     setCurrentStep(1);
     setOnboardingComplete(false);
     setExtractedValues(null);
+    setCompletedSuggestions([]);
   };
 
   const currentProgress = (currentStep / 6) * 100;
 
+  // Dynamic sidebar metrics calculations
+  const weightVal = parseFloat(formData.weight) || 70;
+  const heightVal = parseFloat(formData.height) || 175;
+  const ageVal = parseFloat(formData.age) || 30;
+  const isMale = formData.gender === "Male";
+  
+  // Basal Metabolic Rate (Mifflin-St Jeor)
+  const dynamicBmr = Math.round(10 * weightVal + 6.25 * heightVal - 5 * ageVal + (isMale ? 5 : -161));
+  
+  // Ideal Fluid Allocation
+  const fluidBase = (weightVal * 35) / 1000;
+  const fluidAdjust = formData.exercise.includes("3–4") || formData.exercise.includes("Active") ? 0.7 : formData.exercise.includes("5+") ? 1.2 : 0;
+  const dynamicFluid = Math.round((fluidBase + fluidAdjust) * 10) / 10;
+
+  // Active risk coefficients triggers list
+  const activeTriggers: string[] = [];
+  if (parseFloat(formData.age) > 45) activeTriggers.push("Age Factor (>45 yrs)");
+  if (bmiCategory === "Overweight" || bmiCategory === "Obese") activeTriggers.push(`Elevated BMI (${bmiCategory})`);
+  if (formData.medicalHistory.length > 0 && !formData.medicalHistory.includes("None")) {
+    formData.medicalHistory.forEach(h => {
+      if (h !== "None") activeTriggers.push(`Personal: ${h}`);
+    });
+  }
+  if (formData.familyHistory.length > 0 && !formData.familyHistory.includes("None")) {
+    formData.familyHistory.forEach(f => {
+      if (f !== "None") activeTriggers.push(`Genetic: ${f}`);
+    });
+  }
+  if (formData.smoking === "Regularly" || formData.smoking === "Occasionally") activeTriggers.push("Vascular: Smoke Load");
+  if (formData.stressLevel === "High" || formData.stressLevel === "Severe") activeTriggers.push("Endocrine: High Stress");
+  if (formData.symptoms.length > 0 && !formData.symptoms.includes("None")) {
+    formData.symptoms.forEach(s => {
+      if (s !== "None") activeTriggers.push(`Symptom: ${s}`);
+    });
+  }
+
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-12" id="clinical-onboarding-wizard">
+    <div className="w-full max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-12" id="clinical-onboarding-wizard">
       
       {/* Upper Title Description */}
-      <div className="text-center mb-8 relative">
-        <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-violet-600/15 border border-violet-500/20 mb-3 shadow-[0_0_15px_rgba(139,92,246,0.1)]">
-          <Activity className="h-6 w-6 text-violet-400 animate-pulse" />
+      <div className="text-center mb-10 relative">
+        <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-violet-600/15 border border-violet-500/25 mb-4 shadow-[0_0_20px_rgba(139,92,246,0.15)]">
+          <Activity className="h-7 w-7 text-violet-400 animate-pulse" />
         </div>
-        <h2 className="text-2xl md:text-3xl font-display font-medium text-white tracking-tight">
+        <h2 className="text-3xl md:text-4xl font-display font-medium text-white tracking-tight">
           Precision Chronic Risk Diagnostic
         </h2>
-        <p className="text-xs text-zinc-400 font-mono tracking-widest uppercase mt-1">
+        <p className="text-xs text-zinc-400 font-mono tracking-widest uppercase mt-2">
           Machine Learning Risk Grounding • 6-Section Onboarding
         </p>
       </div>
@@ -478,13 +549,16 @@ export default function HealthOnboarding() {
       <AnimatePresence mode="wait">
         {!onboardingComplete ? (
           /* ================= ONBOARDING QUESTIONNAIRE FORM SYSTEM ================= */
-          <motion.div
-            key="onboarding-questions"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            className="bg-slate-950/80 border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative backdrop-blur-2xl text-left"
-          >
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start text-left">
+            
+            {/* Left Column: Questionnaire Wizard Form (Col: 8) */}
+            <motion.div
+              key="onboarding-questions-col"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="lg:col-span-8 bg-slate-950/80 border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative backdrop-blur-2xl flex flex-col justify-between"
+            >
             {/* Holographic Glowing Header line */}
             <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-violet-500 via-fuchsia-500 to-sky-500 animate-pulse" />
 
@@ -1153,6 +1227,102 @@ export default function HealthOnboarding() {
 
             </div>
           </motion.div>
+
+            {/* Right Column: AI Live Telemetry Deck Sidebar (Col: 4) */}
+            <div className="lg:col-span-4 space-y-6">
+              
+              {/* Telemetry header */}
+              <div className="p-5 border border-white/10 bg-slate-950/80 rounded-3xl relative overflow-hidden flex flex-col justify-between text-left shadow-lg">
+                <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-violet-500/30 via-sky-500/30 to-transparent" />
+                
+                <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-violet-400 animate-pulse" />
+                    <div>
+                      <h4 className="text-sm font-bold text-white tracking-wide uppercase font-mono">Telemetry Link</h4>
+                      <p className="text-[9px] text-zinc-500 font-mono">V3-Somatic-Calculus</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+                    <span className="text-[8px] font-mono font-bold text-emerald-400 uppercase">Live Sync</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4 mt-4">
+                  {/* Metric 1 */}
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-zinc-400 font-mono">Body Mass Index</span>
+                    <span className="text-white font-mono font-bold">{bmi} kg/m² ({bmiCategory})</span>
+                  </div>
+                  {/* Metric 2 */}
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-zinc-400 font-mono">Basal Metabolism</span>
+                    <span className="text-white font-mono font-bold">{dynamicBmr} kcal / day</span>
+                  </div>
+                  {/* Metric 3 */}
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-zinc-400 font-mono">Daily Fluid Limit</span>
+                    <span className="text-white font-mono font-bold">{dynamicFluid} Liters / day</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Live clinical severity metrics alarms check box indicators */}
+              <div className="p-5 border border-white/10 bg-slate-950/80 rounded-3xl relative overflow-hidden text-left shadow-lg">
+                <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-rose-500/20 to-transparent" />
+                
+                <h4 className="text-xs uppercase font-mono tracking-widest font-extrabold text-rose-400 block mb-3 pb-2 border-b border-white/5">
+                  Somatic Alert Channels
+                </h4>
+
+                {activeTriggers.length > 0 ? (
+                  <div className="space-y-2.5 max-h-[190px] overflow-y-auto pr-1">
+                    {activeTriggers.map((trig, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2.5 bg-red-950/10 border border-red-500/10 hover:border-red-500/25 rounded-xl text-[11px] font-mono text-zinc-300">
+                        <span className="truncate pr-2">{trig}</span>
+                        <span className="text-rose-400 font-bold text-[9px] bg-rose-500/10 px-1.5 py-0.5 rounded shrink-0 uppercase">Active Alert</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-6 text-center text-zinc-500 text-xs font-mono">
+                    ● No Active Physiological Risk Stressors Checked
+                  </div>
+                )}
+              </div>
+
+              {/* Interactive Telemetry Log feeds */}
+              <div className="p-5 border border-white/10 bg-slate-950/80 rounded-3xl relative overflow-hidden text-left shadow-lg">
+                <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-sky-500/20 to-transparent" />
+                
+                <h4 className="text-xs uppercase font-mono tracking-widest font-extrabold text-sky-400 block mb-3 pb-2 border-b border-white/5">
+                  Clinical Sensor Streams
+                </h4>
+
+                <div className="space-y-2 text-[10px] font-mono text-zinc-500">
+                  <div className="flex justify-between gap-2 border-b border-white/[0.02] pb-1">
+                    <span>[SYS] HOME_OSTEO_CALC</span>
+                    <span className="text-zinc-400">READY</span>
+                  </div>
+                  <div className="flex justify-between gap-2 border-b border-white/[0.02] pb-1">
+                    <span>[SYS] LIPID_DIAG_INTEGRITY</span>
+                    <span className="text-emerald-400">98.7%</span>
+                  </div>
+                  <div className="flex justify-between gap-2 border-b border-white/[0.02] pb-1">
+                    <span>[SYS] INSULIN_THRESHOLD_EST</span>
+                    <span className="text-zinc-400">CALIBRATED</span>
+                  </div>
+                  <div className="flex justify-between gap-2 pb-1">
+                    <span>[SYS] VASCULAR_VITAL_SENSORS</span>
+                    <span className="text-emerald-400">ONLINE</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
         ) : (
           /* ================= COMPLETED COGNITIVE ASSESSMENTS / CLINICAL VISUALS ================= */
           <motion.div
@@ -1161,13 +1331,15 @@ export default function HealthOnboarding() {
             animate={{ opacity: 1, scale: 1 }}
             className="space-y-6 text-left"
           >
+            {/* START OF BENTO GRID BRANDING */}
             {/* Action panel triggers inside completing diagnostics */}
-            <div className="flex justify-between items-center bg-white/[0.01] border border-white/5 p-4 rounded-2xl">
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between bg-slate-900/40 border border-white/10 p-4 rounded-2xl backdrop-blur-md">
               <button
                 onClick={handleReset}
-                className="px-5 py-2.5 bg-white/5 text-zinc-200 hover:text-white border border-white/10 rounded-xl text-sm font-sans font-bold cursor-pointer hover:bg-white/10 transition-all shadow-md"
+                className="px-5 py-2.5 bg-white/5 text-zinc-200 hover:text-white border border-white/10 rounded-xl text-xs font-sans font-bold cursor-pointer hover:bg-white/10 transition-all shadow-md flex items-center gap-1.5"
               >
-                ← Take Test Again / Reset Answers
+                <RefreshCw className="h-4 w-4" />
+                Take Test Again / Reset Answers
               </button>
               <div className="flex items-center gap-2">
                 <button
@@ -1175,7 +1347,7 @@ export default function HealthOnboarding() {
                     playBeep(1100, 0.1);
                     window.print();
                   }}
-                  className="px-5 py-2.5 bg-violet-600/10 hover:bg-violet-600 text-violet-300 hover:text-white border border-violet-500/20 rounded-xl text-sm font-sans font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
+                  className="px-5 py-2.5 bg-violet-600/10 hover:bg-violet-600 text-violet-300 hover:text-white border border-violet-500/20 rounded-xl text-xs font-sans font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
                 >
                   <Download className="h-4.5 w-4.5" />
                   Download / Print EHR
@@ -1183,26 +1355,51 @@ export default function HealthOnboarding() {
               </div>
             </div>
 
+            {/* HIGH TECH DIAGNOSTIC METADATA STRIP */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-slate-950/60 border border-white/5 p-4 rounded-2xl text-center font-mono">
+              <div className="text-left p-3.5 bg-black/40 rounded-xl border border-white/5">
+                <span className="text-[9px] text-zinc-500 font-extrabold uppercase block tracking-wider">Diagnostic Status</span>
+                <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 mt-1">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
+                  EHR COMPILED
+                </span>
+              </div>
+              <div className="text-left p-3.5 bg-black/40 rounded-xl border border-white/5">
+                <span className="text-[9px] text-zinc-500 font-extrabold uppercase block tracking-wider">AI Confidence Matrix</span>
+                <span className="text-xs font-bold text-violet-300 block mt-1">98.7% Precision</span>
+              </div>
+              <div className="text-left p-3.5 bg-black/40 rounded-xl border border-white/5">
+                <span className="text-[9px] text-zinc-500 font-extrabold uppercase block tracking-wider">Biometric Data Points</span>
+                <span className="text-xs font-bold text-white block mt-1">{24 + formData.uploadedFiles.length} Params Checked</span>
+              </div>
+              <div className="text-left p-3.5 bg-black/40 rounded-xl border border-white/5">
+                <span className="text-[9px] text-zinc-500 font-extrabold uppercase block tracking-wider">HIPAA Cryptography</span>
+                <span className="text-xs font-bold text-sky-400 block mt-1">AES-256 Enabled</span>
+              </div>
+            </div>
+
             {/* Diagnostic Layout Core Summary Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               
-              {/* Left Wing Column: Score & Risk meters cards */}
+              {/* Card 1: Somatic Command Center (Score + Patient Details) (Col: 5) */}
               <div className="lg:col-span-5 space-y-6">
                 
                 {/* Visual Circular Diagnostic score badge */}
-                <div className="p-6 border border-white/10 bg-slate-950/80 rounded-3xl relative overflow-hidden flex flex-col items-center justify-center text-center shadow-lg backdrop-blur-2xl">
-                  <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-violet-500/20 via-fuchsia-500/20 to-transparent" />
+                <div className="p-6 border border-white/10 bg-gradient-to-br from-[#0a0a14] to-slate-950/90 rounded-3xl relative overflow-hidden flex flex-col items-center justify-center text-center shadow-xl backdrop-blur-2xl">
+                  <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-violet-500/30 via-fuchsia-500/30 to-transparent" />
                   
-                  <span className="text-xs font-mono text-violet-400 uppercase font-bold tracking-wider block mb-4">PulsePoint Comprehensive health index</span>
+                  <span className="text-xs font-mono text-violet-400 uppercase font-extrabold tracking-wider block mb-4">
+                    PulsePoint Health Score
+                  </span>
                   
-                  <div className="relative h-32 w-32 flex items-center justify-center">
+                  <div className="relative h-36 w-36 flex items-center justify-center hover:scale-105 transition-transform duration-300">
                     {/* SVG Progress Circle Ring */}
                     <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                       <circle 
                         cx="50" 
                         cy="50" 
                         r="42" 
-                        stroke="rgba(255,255,255,0.04)" 
+                        stroke="rgba(255,255,255,0.03)" 
                         strokeWidth="8" 
                         fill="none" 
                       />
@@ -1229,69 +1426,312 @@ export default function HealthOnboarding() {
                     
                     {/* Centered raw score */}
                     <div className="absolute flex flex-col justify-center items-center">
-                      <span className="text-3xl font-mono font-black text-white leading-none">{healthScore}</span>
-                      <span className="text-xs text-zinc-400 font-mono tracking-wider font-bold mt-1">/100 PTS</span>
+                      <span className="text-4xl font-mono font-black text-white leading-none tracking-tight">{healthScore}</span>
+                      <span className="text-[10px] text-zinc-400 font-mono tracking-widest font-extrabold mt-1">/100 PTS</span>
                     </div>
                   </div>
 
-                  <div className="mt-4 p-4 bg-white/[0.02] border border-white/5 rounded-2xl text-xs sm:text-sm font-sans text-zinc-300 max-w-sm leading-relaxed">
+                  <div className="mt-5 p-4 bg-white/[0.02] border border-white/5 rounded-2xl text-xs sm:text-sm font-sans text-zinc-300 max-w-sm leading-relaxed text-center">
                     {healthScore >= 80 ? (
-                      <span className="text-emerald-400 font-bold block text-sm mb-1">✓ Healthy Cardiovascular Baseline:</span>
+                      <span className="text-emerald-400 font-bold block text-sm mb-1.5 flex items-center justify-center gap-1.5">
+                        <CheckCircle className="h-4 w-4" /> Healthy Somatic Baseline
+                      </span>
                     ) : healthScore >= 55 ? (
-                      <span className="text-amber-400 font-bold block text-sm mb-1">⚠️ Moderate Risk Detected:</span>
+                      <span className="text-amber-400 font-bold block text-sm mb-1.5 flex items-center justify-center gap-1.5">
+                        <AlertTriangle className="h-4 w-4" /> Moderate Risk Detected
+                      </span>
                     ) : (
-                      <span className="text-rose-400 font-bold block text-sm mb-1">🚨 High Somatic Stress Indicators:</span>
+                      <span className="text-rose-400 font-bold block text-sm mb-1.5 flex items-center justify-center gap-1.5">
+                        <AlertTriangle className="h-4 w-4 text-rose-500 animate-pulse" /> Urgent Risk Warnings
+                      </span>
                     )}
-                    <span>Sustain active lifestyle and physical metrics. Optimize your specific risks according to suggestions below.</span>
+                    <span>Dynamic metabolic evaluation recommends focusing on high-priority recommendations to recover homeostasis.</span>
+                  </div>
+                </div>
+
+                {/* Digital Patient Ledger Sheet */}
+                <div className="p-6 border border-white/10 bg-slate-950/80 rounded-3xl relative overflow-hidden text-left shadow-lg">
+                  <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-sky-500/20 via-violet-500/20 to-transparent" />
+                  
+                  <h4 className="text-xs uppercase font-mono tracking-widest font-extrabold text-sky-400 block mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
+                    <User className="h-4.5 w-4.5 text-sky-400" />
+                    Patient Vital Record
+                  </h4>
+
+                  <div className="grid grid-cols-2 gap-4 text-xs font-mono">
+                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-1">Full Patient Name</span>
+                      <span className="text-sm font-bold text-white block truncate">{formData.fullName || "Unregistered Patient"}</span>
+                    </div>
+                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-1">Age / Assigned Gender</span>
+                      <span className="text-sm font-bold text-white block">{formData.age} Yrs • {formData.gender}</span>
+                    </div>
+                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-1">Calculated BMI Metrics</span>
+                      <span className="text-sm font-bold text-white block">
+                        {bmi} <span className="text-[10px] text-zinc-400 font-normal">({bmiCategory})</span>
+                      </span>
+                    </div>
+                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-1">Basal Metabolic Rate</span>
+                      <span className="text-sm font-bold text-violet-300 block">{dynamicBmr} Kcal/day</span>
+                    </div>
+                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl col-span-2">
+                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-1">Fluid Consumption target</span>
+                      <span className="text-sm font-bold text-sky-300 block flex items-center gap-1.5">
+                        <Droplet className="h-4 w-4 text-sky-400 fill-sky-400/20 shrink-0" />
+                        {dynamicFluid} Liters / Day Quota
+                      </span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Chronic Disease Risk Levels metrics */}
-                <div className="p-6 border border-white/10 bg-slate-950/80 rounded-3xl relative overflow-hidden text-left shadow-lg">
+                <div className="p-6 border border-white/10 bg-[#070712]/90 rounded-3xl relative overflow-hidden text-left shadow-lg h-full flex flex-col justify-between">
                   <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-red-500/20 via-violet-500/20 to-transparent" />
                   
-                  <h4 className="text-sm uppercase font-mono tracking-wider font-bold text-violet-300 block mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
-                    <ShieldCheck className="h-5 w-5 text-violet-400" />
-                    Somatic Chronic Disease Risk Levels
-                  </h4>
+                  <div>
+                    <h4 className="text-sm uppercase font-mono tracking-wider font-bold text-violet-300 block mb-4 flex items-center justify-between border-b border-white/5 pb-2">
+                      <span className="flex items-center gap-2">
+                        <ShieldCheck className="h-5 w-5 text-violet-400" />
+                        Somatic Chronic Disease Risk Levels
+                      </span>
+                      <span className="text-[10px] text-zinc-500 font-mono font-normal">Somatic Risk Vector</span>
+                    </h4>
 
-                  <div className="space-y-4">
-                    {[
-                      { key: "diabetes", title: "Diabetes mellitus Risk", level: riskLevels.diabetes },
-                      { key: "heart", title: "Coronary pathology Risk", level: riskLevels.heart },
-                      { key: "hypertension", title: "Hypertensive vascular Risk", level: riskLevels.hypertension },
-                      { key: "obesity", title: "Obesity / Adipose Burden Risk", level: riskLevels.obesity }
-                    ].map((m) => {
-                      const percentage = m.level === "High" ? 85 : m.level === "Medium" ? 50 : 20;
-                      const levelColor = m.level === "High" ? "text-rose-400 bg-rose-500/10 border-rose-500/20" : m.level === "Medium" ? "text-amber-400 bg-amber-500/10 border-amber-500/20" : "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
-                      
-                      return (
-                        <div key={m.key} className="space-y-2 text-left">
-                          <div className="flex justify-between items-center">
-                            <span className="text-zinc-200 font-semibold text-sm sm:text-base">{m.title}</span>
-                            <span className={`text-xs font-mono font-bold uppercase px-3 py-1 rounded-lg border ${levelColor}`}>
-                              {m.level}
-                            </span>
+                    <div className="space-y-5">
+                      {[
+                        { 
+                          key: "diabetes", 
+                          title: "Diabetes Mellitus Type-II", 
+                          level: riskLevels.diabetes,
+                          desc: "Monitors insulin resistance indicators based on activity, lifestyle, and diagnostic sugar metrics."
+                        },
+                        { 
+                          key: "heart", 
+                          title: "Coronary Artery Pathology", 
+                          level: riskLevels.heart,
+                          desc: "Determines cardiovascular stress markers from exercise habits, smoking history, and family heredity."
+                        },
+                        { 
+                          key: "hypertension", 
+                          title: "Hypertensive Vascular Risk", 
+                          level: riskLevels.hypertension,
+                          desc: "Monitors vascular load indices influenced by age, salt intake habits, and chronic stressors."
+                        },
+                        { 
+                          key: "obesity", 
+                          title: "Obesity / Adipose Lipid Burden", 
+                          level: riskLevels.obesity,
+                          desc: "Indicates musculoskeletal strain and adipose distribution computed from dynamic BMI indicators."
+                        }
+                      ].map((m) => {
+                        const percentage = m.level === "High" ? 85 : m.level === "Medium" ? 50 : 20;
+                        const levelColor = m.level === "High" ? "text-rose-400 bg-rose-500/10 border-rose-500/20" : m.level === "Medium" ? "text-amber-400 bg-amber-500/10 border-amber-500/20" : "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+                        
+                        return (
+                          <div key={m.key} className="p-4 bg-white/[0.01] border border-white/5 rounded-2xl space-y-2.5 hover:bg-white/[0.02] transition-colors text-left">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <span className="text-zinc-200 font-bold text-sm sm:text-base block">{m.title}</span>
+                                <span className="text-[10px] text-zinc-500 leading-normal block mt-0.5">{m.desc}</span>
+                              </div>
+                              <span className={`text-xs font-mono font-bold uppercase px-3 py-1 rounded-lg border shrink-0 ${levelColor}`}>
+                                {m.level}
+                              </span>
+                            </div>
+                            
+                            {/* Meter line progress */}
+                            <div className="w-full bg-white/5 h-2.5 rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full transition-all duration-1000 ${
+                                  m.level === "High" 
+                                    ? "bg-gradient-to-r from-violet-600 to-rose-500" 
+                                    : m.level === "Medium" 
+                                      ? "bg-gradient-to-r from-violet-600 to-amber-500" 
+                                      : "bg-gradient-to-r from-violet-600 to-emerald-500"
+                                }`} 
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
                           </div>
-                          
-                          {/* Meter line progress */}
-                          <div className="w-full bg-white/5 h-2.5 rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full rounded-full transition-all duration-1000 ${
-                                m.level === "High" 
-                                  ? "bg-gradient-to-r from-violet-600 to-rose-500" 
-                                  : m.level === "Medium" 
-                                    ? "bg-gradient-to-r from-violet-600 to-amber-500" 
-                                    : "bg-gradient-to-r from-violet-600 to-emerald-500"
-                              }`} 
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="mt-5 p-3.5 bg-white/[0.01] border border-white/5 rounded-2xl flex items-center justify-between text-xs text-zinc-300 gap-3 text-left">
+                    <Info className="h-5 w-5 text-violet-400 shrink-0" />
+                    <span>These levels evaluate active clinical markers, personal EHR inputs, and genetic family history. Verify with diagnostic laboratory checkups.</span>
                   </div>
                 </div>
+
+                {/* Direct Home Test Booking or External Labs Platform links (Only if health index is below 70) */}
+                {healthScore < 70 && (
+                  <div className="p-6 border border-white/10 bg-slate-950/80 rounded-3xl relative overflow-hidden text-left shadow-lg space-y-5 mt-6">
+                    <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-transparent" />
+                    
+                    <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                      <AlertTriangle className="h-5 w-5 text-amber-400 animate-pulse" />
+                      <div>
+                        <h4 className="text-sm uppercase font-mono tracking-wider font-bold text-amber-300">
+                          Critical Lab Diagnostics Required
+                        </h4>
+                        <p className="text-[10px] text-zinc-500 font-mono">
+                          Health score below 70 baseline. Requesting phlebotomy diagnostics.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Choice 1: Visit Website buttons */}
+                    <div className="space-y-2">
+                      <span className="text-[10px] text-zinc-400 font-mono font-bold uppercase tracking-wider block">
+                        Option A: Book on Partner Portals
+                      </span>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { name: "Healthians", url: "https://www.healthians.com" },
+                          { name: "Clinico", url: "https://www.clinico.in" },
+                          { name: "Metropolis", url: "https://www.metropolisindia.com" }
+                        ].map((site) => (
+                          <a
+                            key={site.name}
+                            href={site.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => playBeep(850, 0.05)}
+                            className="p-2.5 rounded-xl bg-white/[0.02] border border-white/10 hover:border-violet-500/40 text-center text-[11px] font-bold text-white hover:bg-white/[0.04] transition-all flex flex-col items-center justify-center gap-1 group"
+                          >
+                            <span className="text-xs group-hover:text-violet-400">{site.name}</span>
+                            <span className="text-[8px] text-zinc-500 font-mono flex items-center gap-0.5">
+                              Visit ↗
+                            </span>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Choice 2: Direct booking simulation form */}
+                    <div className="space-y-3 pt-2 border-t border-white/5">
+                      <span className="text-[10px] text-zinc-400 font-mono font-bold uppercase tracking-wider block">
+                        Option B: Book Home Sample Collection Slot
+                      </span>
+
+                      {!bookingCompleted ? (
+                        <form onSubmit={handleBookHomeTest} className="space-y-3">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="text-[9px] text-zinc-500 font-mono uppercase block mb-1">Select Laboratory</label>
+                              <select
+                                value={bookingProvider}
+                                onChange={(e) => setBookingProvider(e.target.value)}
+                                className="w-full bg-black/40 border border-white/10 text-xs text-white rounded-xl px-2.5 py-2 focus:outline-none focus:border-violet-500 font-sans"
+                              >
+                                <option value="Healthians" className="bg-slate-950 text-white">Healthians Labs</option>
+                                <option value="Clinico" className="bg-slate-950 text-white">Clinico Pathology</option>
+                                <option value="Metropolis" className="bg-slate-950 text-white">Metropolis Diagnostic</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="text-[9px] text-zinc-500 font-mono uppercase block mb-1">Select Package</label>
+                              <select
+                                value={bookingPackage}
+                                onChange={(e) => setBookingPackage(e.target.value)}
+                                className="w-full bg-black/40 border border-white/10 text-xs text-white rounded-xl px-2.5 py-2 focus:outline-none focus:border-violet-500 font-sans"
+                              >
+                                <option value="Comprehensive Health & Wellness Panel" className="bg-slate-950 text-white">Comprehensive Profile</option>
+                                <option value="HbA1c & Blood Sugar Check" className="bg-slate-950 text-white">HbA1c & Sugar</option>
+                                <option value="Lipid & Coronary Risk Scan" className="bg-slate-950 text-white">Lipid Profile</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="text-[9px] text-zinc-500 font-mono uppercase block mb-1">Preferred Slot (Date & Time)</label>
+                              <input
+                                type="datetime-local"
+                                value={bookingSlot}
+                                required
+                                onChange={(e) => setBookingSlot(e.target.value)}
+                                className="w-full bg-black/40 border border-white/10 text-xs text-white rounded-xl px-2.5 py-2 focus:outline-none focus:border-violet-500 font-sans"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="text-[9px] text-zinc-500 font-mono uppercase block mb-1">Patient Phone Contact</label>
+                              <input
+                                type="tel"
+                                placeholder="+91 98765 43210"
+                                value={bookingPhone}
+                                required
+                                onChange={(e) => setBookingPhone(e.target.value)}
+                                className="w-full bg-black/40 border border-white/10 text-xs text-white rounded-xl px-2.5 py-2 focus:outline-none focus:border-violet-500 font-sans"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="text-[9px] text-zinc-500 font-mono uppercase block mb-1">Home Collection Physical Address</label>
+                            <input
+                              type="text"
+                              placeholder="Enter home or office address for blood draw..."
+                              value={bookingAddress}
+                              required
+                              onChange={(e) => setBookingAddress(e.target.value)}
+                              className="w-full bg-black/40 border border-white/10 text-xs text-white rounded-xl px-2.5 py-2 focus:outline-none focus:border-violet-500 font-sans"
+                            />
+                          </div>
+
+                          <button
+                            type="submit"
+                            disabled={isBookingSubmitting}
+                            className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-xs font-bold font-mono transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            {isBookingSubmitting ? (
+                              <>
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                Reserving Slot on {bookingProvider} network...
+                              </>
+                            ) : (
+                              <>
+                                📅 Secure Home Collection Slot
+                              </>
+                            )}
+                          </button>
+                        </form>
+                      ) : (
+                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl text-center space-y-2">
+                          <CheckCircle className="h-8 w-8 text-emerald-400 mx-auto animate-bounce" />
+                          <h5 className="text-xs font-bold text-white uppercase tracking-wider">
+                            Home Sample Collection Confirmed!
+                          </h5>
+                          <p className="text-[10px] text-zinc-300 leading-normal max-w-xs mx-auto">
+                            A certified phlebotomist from <b>{bookingProvider}</b> has been booked to collect your blood sample at your address on <b>{new Date(bookingSlot).toLocaleString()}</b>.
+                          </p>
+                          <div className="text-[9px] font-mono bg-black/30 border border-white/5 py-1.5 px-3 rounded-lg inline-block text-zinc-400">
+                            Booking ID: <span className="text-emerald-400 font-bold">{bookingSuccessId}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setBookingCompleted(false);
+                              setBookingSlot("");
+                              setBookingPhone("");
+                              setBookingAddress("");
+                              playBeep(700, 0.05);
+                            }}
+                            className="text-[9px] font-mono hover:underline text-zinc-400 hover:text-white block mx-auto pt-1"
+                          >
+                            Book Another Test
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
               </div>
               
