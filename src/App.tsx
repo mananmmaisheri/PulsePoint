@@ -1,6 +1,5 @@
 import { useState, startTransition, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { onAuthStateChanged } from "firebase/auth";
 import { auth, getUserProfile, saveUserProfile, UserProfileData } from "./lib/firebase";
 
 // Import modular components
@@ -29,95 +28,42 @@ export interface AppUser {
   emergencyPhone?: string;
 }
 
+const DEFAULT_USER: AppUser = {
+  uid: "pulsepoint-local-user-id",
+  email: "clinician@pulsepoint.ai",
+  name: "Dr. Jordan Henderson",
+  isGuest: false,
+  joinedDate: "June 2026",
+  birthdate: "1994-08-15",
+  bloodType: "A-Positive",
+  allergies: "No declared allergies",
+  conditions: "Healthy Baseline",
+  emergencyContact: "Emergency Dispatch",
+  emergencyPhone: "911"
+};
+
 export default function App() {
   // Authentication states
-  const [user, setUser] = useState<AppUser | null>(() => {
+  const [user, setUser] = useState<AppUser>(() => {
     const saved = localStorage.getItem("pulsepoint_user");
     if (saved) {
       try {
         return JSON.parse(saved);
       } catch (e) {
-        return null;
+        // Fallback to default
       }
     }
-    return null;
+    // Set default user in local storage so other components find it instantly
+    localStorage.setItem("pulsepoint_user", JSON.stringify(DEFAULT_USER));
+    return DEFAULT_USER;
   });
 
-  // Observe Firebase Auth state
+  // Ensure user is synchronized on load
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        // Fetch user details from Firestore
-        const profile = await getUserProfile(firebaseUser.uid);
-        if (profile) {
-          const appUser: AppUser = {
-            uid: firebaseUser.uid,
-            email: profile.email,
-            name: profile.displayName,
-            isGuest: profile.isGuest,
-            birthdate: profile.birthdate,
-            bloodType: profile.bloodType,
-            allergies: profile.allergies,
-            conditions: profile.conditions,
-            emergencyContact: profile.emergencyContact,
-            emergencyPhone: profile.emergencyPhone,
-            joinedDate: profile.joinedDate,
-          };
-          localStorage.setItem("pulsepoint_user", JSON.stringify(appUser));
-          setUser(appUser);
-        } else {
-          // Auto-create a profile document for console-created users or Google sign-ins
-          const defaultProfile: UserProfileData = {
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName || firebaseUser.email?.split("@")[0].charAt(0).toUpperCase() + firebaseUser.email?.split("@")[0].slice(1) || "User",
-            isGuest: false,
-            joinedDate: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
-            birthdate: "1994-08-15",
-            bloodType: "A-Positive",
-            allergies: "No declared allergies",
-            conditions: "Healthy Baseline",
-            emergencyContact: "Emergency Dispatch",
-            emergencyPhone: "911"
-          };
-          try {
-            await saveUserProfile(firebaseUser.uid, defaultProfile);
-            const appUser: AppUser = {
-              uid: firebaseUser.uid,
-              email: defaultProfile.email,
-              name: defaultProfile.displayName,
-              isGuest: defaultProfile.isGuest,
-              birthdate: defaultProfile.birthdate,
-              bloodType: defaultProfile.bloodType,
-              allergies: defaultProfile.allergies,
-              conditions: defaultProfile.conditions,
-              emergencyContact: defaultProfile.emergencyContact,
-              emergencyPhone: defaultProfile.emergencyPhone,
-              joinedDate: defaultProfile.joinedDate,
-            };
-            localStorage.setItem("pulsepoint_user", JSON.stringify(appUser));
-            setUser(appUser);
-          } catch (e) {
-            console.error("Failed to auto-create user profile", e);
-            // Fallback to local profile just in case Firestore rules block it temporarily
-            const localSaved = localStorage.getItem("pulsepoint_user");
-            if (localSaved) {
-              try {
-                const parsed = JSON.parse(localSaved);
-                if (parsed.uid === firebaseUser.uid) {
-                  setUser(parsed);
-                  return;
-                }
-              } catch (err) {}
-            }
-          }
-        }
-      } else {
-        localStorage.removeItem("pulsepoint_user");
-        setUser(null);
-      }
-    });
-    return () => unsubscribe();
+    const saved = localStorage.getItem("pulsepoint_user");
+    if (!saved) {
+      localStorage.setItem("pulsepoint_user", JSON.stringify(DEFAULT_USER));
+    }
   }, []);
 
   // Navigation tabs routing state: "home" | "pulsepoint" | "features" | "profile"
