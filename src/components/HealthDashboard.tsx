@@ -29,6 +29,12 @@ import {
   Loader2
 } from "lucide-react";
 import { Reminder, UserHealthProfile } from "../types";
+import { 
+  addMedication, 
+  fetchMedications, 
+  updateMedication, 
+  deleteMedication 
+} from "../lib/firebase";
 import { APIProvider, Map, AdvancedMarker, Pin } from "@vis.gl/react-google-maps";
 
 // Google Maps Key check
@@ -143,6 +149,11 @@ const ORDER_PLATFORMS = [
 ];
 
 export default function HealthDashboard() {
+  const [user] = useState(() => {
+    const saved = localStorage.getItem("pulsepoint_user");
+    return saved ? JSON.parse(saved) : null;
+  });
+
   // 1. Core Profile states
   const [profile] = useState<UserHealthProfile>(() => {
     const saved = localStorage.getItem("pulsepoint_profile");
@@ -159,16 +170,71 @@ export default function HealthDashboard() {
   });
 
   // 2. Reminders schedule states
-  const [reminders, setReminders] = useState<Reminder[]>(() => {
-    const saved = localStorage.getItem("pulsepoint_reminders");
-    return saved
-      ? JSON.parse(saved)
-      : [
-          { id: "rem-1", name: "Albuterol Inhaler Dosage", type: "medication", time: "08:00", dosage: "2 puffs as needed", active: true, takenToday: false },
-          { id: "rem-2", name: "Atorvastatin Lipid Control", type: "medication", time: "21:00", dosage: "10 mg oral tablet", active: true, takenToday: false },
-          { id: "rem-3", name: "Vitals Telemetry Review", type: "appointment", time: "14:30", date: "2026-06-30", doctor: "Dr. Raymond Evans", active: true },
-        ];
-  });
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+
+  // Load reminders from Firestore if logged in, otherwise from localStorage
+  useEffect(() => {
+    let active = true;
+    const loadReminders = async () => {
+      if (user && user.uid) {
+        try {
+          const fetchedMeds = await fetchMedications(user.uid);
+          if (active) {
+            const mappedMeds: Reminder[] = fetchedMeds.map(med => ({
+              id: med.id || "",
+              name: med.name,
+              type: "medication",
+              time: med.time,
+              dosage: med.dosage,
+              active: true,
+              takenToday: med.takenToday || false
+            }));
+
+            // Fetch appointments from localstorage to combine
+            const savedLocal = localStorage.getItem("pulsepoint_reminders");
+            const localReminders: Reminder[] = savedLocal ? JSON.parse(savedLocal) : [];
+            const appointments = localReminders.filter(r => r.type === "appointment");
+            if (appointments.length === 0) {
+              appointments.push({ 
+                id: "rem-3", 
+                name: "Vitals Telemetry Review", 
+                type: "appointment", 
+                time: "14:30", 
+                date: "2026-06-30", 
+                doctor: "Dr. Raymond Evans", 
+                active: true 
+              });
+            }
+
+            setReminders([...mappedMeds, ...appointments]);
+          }
+        } catch (e) {
+          console.error("Failed to fetch medications from Firestore:", e);
+        }
+      } else {
+        const saved = localStorage.getItem("pulsepoint_reminders");
+        if (saved) {
+          setReminders(JSON.parse(saved));
+        } else {
+          setReminders([
+            { id: "rem-1", name: "Albuterol Inhaler Dosage", type: "medication", time: "08:00", dosage: "2 puffs as needed", active: true, takenToday: false },
+            { id: "rem-2", name: "Atorvastatin Lipid Control", type: "medication", time: "21:00", dosage: "10 mg oral tablet", active: true, takenToday: false },
+            { id: "rem-3", name: "Vitals Telemetry Review", type: "appointment", time: "14:30", date: "2026-06-30", doctor: "Dr. Raymond Evans", active: true },
+          ]);
+        }
+      }
+    };
+
+    loadReminders();
+    return () => { active = false; };
+  }, [user]);
+
+  // Sync to local storage only if guest/not logged in
+  useEffect(() => {
+    if (!user) {
+      localStorage.setItem("pulsepoint_reminders", JSON.stringify(reminders));
+    }
+  }, [reminders, user]);
 
   // 3. Timer & Live Watch Clocks
   const [systemTime, setSystemTime] = useState<Date>(new Date());
@@ -468,23 +534,45 @@ export default function HealthDashboard() {
   };
 
   // Quick Action Toggles
-  const handleMarkTaken = (id: string) => {
+  const handleMarkTaken = async (id: string) => {
     playSingleBeep(750, 0.08);
-    setReminders((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, takenToday: !r.takenToday } : r))
-    );
+    const updatedReminders = reminders.map((r) => {
+      if (r.id === id) {
+        return { ...r, takenToday: !r.takenToday };
+      }
+      return r;
+    });
+
+    const target = reminders.find(r => r.id === id);
+    if (user && user.uid && target && target.type === "medication") {
+      try {
+        await updateMedication(id, { takenToday: !target.takenToday });
+      } catch (e) {
+        console.error("Failed to update medication status in Firestore:", e);
+      }
+    }
+
+    setReminders(updatedReminders);
   };
 
-  const handleDeleteReminder = (id: string) => {
+  const handleDeleteReminder = async (id: string) => {
     playSingleBeep(500, 0.1);
+    const target = reminders.find(r => r.id === id);
+    if (user && user.uid && target && target.type === "medication") {
+      try {
+        await deleteMedication(id);
+      } catch (e) {
+        console.error("Failed to delete medication from Firestore:", e);
+      }
+    }
     setReminders((prev) => prev.filter((r) => r.id !== id));
   };
 
-  const handleAddMedication = (e: React.FormEvent) => {
+  const handleAddMedication = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMed.name || !newMed.time) return;
 
-    const added: Reminder = {
+    let added: Reminder = {
       id: `rem-${Date.now()}`,
       name: newMed.name,
       type: "medication",
@@ -493,6 +581,24 @@ export default function HealthDashboard() {
       active: true,
       takenToday: false,
     };
+
+    if (user && user.uid) {
+      try {
+        const docId = await addMedication({
+          userId: user.uid,
+          name: added.name,
+          dosage: added.dosage || "1 pill/dose",
+          time: added.time,
+          frequency: "Daily",
+          takenToday: false,
+          history: []
+        });
+        added.id = docId;
+      } catch (e) {
+        console.error("Failed to add medication to Firestore:", e);
+      }
+    }
+
     setReminders((p) => [...p, added]);
     setNewMed({ name: "", time: "", dosage: "" });
     playSingleBeep(900, 0.12);

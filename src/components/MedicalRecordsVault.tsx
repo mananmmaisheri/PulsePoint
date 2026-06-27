@@ -15,24 +15,73 @@ import {
   Award
 } from "lucide-react";
 import { MedicalRecord } from "../types";
+import { 
+  addMedicalRecord, 
+  fetchMedicalRecords, 
+  deleteMedicalRecord 
+} from "../lib/firebase";
 
 export default function MedicalRecordsVault() {
-  const [records, setRecords] = useState<MedicalRecord[]>(() => {
-    const saved = localStorage.getItem("pulsepoint_records");
-    return saved
-      ? JSON.parse(saved)
-      : [
-          {
-            id: "rec-1",
-            category: "Lab Report",
-            fileName: "WBC_Blood_Biochemistry_Profile.pdf",
-            fileType: "application/pdf",
-            dateAdded: "2026-05-20",
-            summary: "Extracted basic standard counts: White Blood Cells (WBC) at 7.2 x10^3/uL, hemoglobin normal at 14.8 g/dL. Cholesterols require supervision: LDL is at 138 mg/dL. Recommends aerobic activity and low lipid diets.",
-            fileData: "ORIGINAL PDF RAW REPORT METRICS:\n------------------------------------------------\nPatient Name: Alex Carter\nLaboratory Order ID: LAB-90928\nCollected on: 2026-05-19\n\nCOMPLETE BLOOD METRICS PANEL:\n- WBC Concentration: 7.2 x 10^3 / uL (Normal: 4.0 - 11.0)\n- Hemoglobin Ratio: 14.8 g/dL (Normal: 13.8 - 17.2)\n- LDL Cholesterol Level: 138 mg/dL (Elevated - target is count < 100)\n- HDL Cholesterol Level: 46 mg/dL\n- Serum Creatinine limit: 0.95 mg/dL\n\nClinical diagnostic review suggests elevated cholesterol parameters. Aerobic zone activity and low-lipid nutritional frameworks are strongly indicated."
-          },
-        ];
+  const [user] = useState(() => {
+    const saved = localStorage.getItem("pulsepoint_user");
+    return saved ? JSON.parse(saved) : null;
   });
+
+  const [records, setRecords] = useState<MedicalRecord[]>([]);
+
+  // Load records from Firestore if user is logged in, otherwise from localStorage
+  useEffect(() => {
+    let active = true;
+    const loadRecords = async () => {
+      if (user && user.uid) {
+        try {
+          const fetched = await fetchMedicalRecords(user.uid);
+          if (active) {
+            const mapped: MedicalRecord[] = fetched.map(doc => ({
+              id: doc.id || "",
+              fileName: doc.fileName,
+              fileType: doc.fileType,
+              dateAdded: doc.uploadedAt?.toDate ? doc.uploadedAt.toDate().toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+              summary: doc.summary,
+              category: doc.category as any,
+              fileData: doc.fileData
+            }));
+            setRecords(mapped);
+          }
+        } catch (e) {
+          console.error("Failed to fetch medical records from Firestore:", e);
+        }
+      } else {
+        const saved = localStorage.getItem("pulsepoint_records");
+        if (saved) {
+          setRecords(JSON.parse(saved));
+        } else {
+          // Initialize default record
+          setRecords([
+            {
+              id: "rec-1",
+              category: "Lab Report",
+              fileName: "WBC_Blood_Biochemistry_Profile.pdf",
+              fileType: "application/pdf",
+              dateAdded: "2026-05-20",
+              summary: "Extracted basic standard counts: White Blood Cells (WBC) at 7.2 x10^3/uL, hemoglobin normal at 14.8 g/dL. Cholesterols require supervision: LDL is at 138 mg/dL. Recommends aerobic activity and low lipid diets.",
+              fileData: "ORIGINAL PDF RAW REPORT METRICS:\n------------------------------------------------\nPatient Name: Alex Carter\nLaboratory Order ID: LAB-90928\nCollected on: 2026-05-19\n\nCOMPLETE BLOOD METRICS PANEL:\n- WBC Concentration: 7.2 x 10^3 / uL (Normal: 4.0 - 11.0)\n- Hemoglobin Ratio: 14.8 g/dL (Normal: 13.8 - 17.2)\n- LDL Cholesterol Level: 138 mg/dL (Elevated - target is count < 100)\n- HDL Cholesterol Level: 46 mg/dL\n- Serum Creatinine limit: 0.95 mg/dL\n\nClinical diagnostic review suggests elevated cholesterol parameters. Aerobic zone activity and low-lipid nutritional frameworks are strongly indicated."
+            }
+          ]);
+        }
+      }
+    };
+
+    loadRecords();
+    return () => { active = false; };
+  }, [user]);
+
+  // Sync to local storage only if guest/not logged in
+  useEffect(() => {
+    if (!user) {
+      localStorage.setItem("pulsepoint_records", JSON.stringify(records));
+    }
+  }, [records, user]);
 
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrResult, setOcrResult] = useState("");
@@ -81,6 +130,23 @@ export default function MedicalRecordsVault() {
           summary: apiSummary,
           fileData: reader.result as string,
         };
+
+        if (user && user.uid) {
+          try {
+            const docId = await addMedicalRecord({
+              userId: user.uid,
+              fileName: newRec.fileName,
+              fileType: newRec.fileType,
+              uploadedAt: new Date(),
+              category: newRec.category,
+              summary: newRec.summary,
+              fileData: newRec.fileData || ""
+            });
+            newRec.id = docId;
+          } catch (error) {
+            console.error("Failed to add medical record to Firestore:", error);
+          }
+        }
 
         setRecords((prev) => [newRec, ...prev]);
         setOcrResult(apiSummary);
@@ -153,6 +219,23 @@ export default function MedicalRecordsVault() {
         fileData: `ORIGINAL EVALUATION SAMPLE REPORT:\n----------------------------------------\nDocument Ref: ${type === "cardio" ? "CARDIOLOGY-ECG-REF" : "HEMATOLOGY-CBC-REF"}\nDate Generated: ${new Date().toISOString().split("T")[0]}\n\nRAW PARSED TEXT CONTENT FROM SCAN:\n\n${mockReportText}`
       };
 
+      if (user && user.uid) {
+        try {
+          const docId = await addMedicalRecord({
+            userId: user.uid,
+            fileName: newRec.fileName,
+            fileType: newRec.fileType,
+            uploadedAt: new Date(),
+            category: newRec.category,
+            summary: newRec.summary,
+            fileData: newRec.fileData || ""
+          });
+          newRec.id = docId;
+        } catch (error) {
+          console.error("Failed to add sample record to Firestore:", error);
+        }
+      }
+
       setRecords((prev) => [newRec, ...prev]);
       setOcrResult(apiSummary);
     } catch (e) {
@@ -163,8 +246,15 @@ export default function MedicalRecordsVault() {
     }
   };
 
-  const deleteRecord = (id: string, e: React.MouseEvent) => {
+  const deleteRecord = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (user && user.uid) {
+      try {
+        await deleteMedicalRecord(id);
+      } catch (error) {
+        console.error("Failed to delete medical record from Firestore:", error);
+      }
+    }
     setRecords((prev) => prev.filter((r) => r.id !== id));
     if (selectedRecord?.id === id) setSelectedRecord(null);
   };

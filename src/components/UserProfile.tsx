@@ -6,8 +6,21 @@ import {
   Trash2, Key, AlertTriangle, Fingerprint, RefreshCcw, CreditCard, 
   ClipboardList, CheckCircle, ArrowRight, UserPlus, FileText, HeartPulse
 } from "lucide-react";
+import { 
+  auth, 
+  saveUserProfile, 
+  getUserProfile, 
+  UserProfileData 
+} from "../lib/firebase";
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signInAnonymously, 
+  signOut 
+} from "firebase/auth";
 
 interface AppUser {
+  uid?: string;
   email: string | null;
   name: string;
   isGuest: boolean;
@@ -102,91 +115,159 @@ export default function UserProfile({ user, onAuthChange, setTab }: UserProfileP
     setIsSubmitting(true);
     playBeep(900, 0.1);
 
-    // Simulate clinical registration process with timeout
-    setTimeout(() => {
-      if (!agreeTerms) {
-        setAuthError("You must agree to the HIPAA secure storage and privacy disclosures.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (isSignUp && !name.trim()) {
-        setAuthError("Please enter your full medical credential name.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (!email.includes("@")) {
-        setAuthError("A valid medical provider or personal email is required.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (password.length < 6) {
-        setAuthError("Security requirement: Password must be at least 6 characters.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Successful clinical session provisioning
-      const provisionedUser: AppUser = {
-        email: email,
-        name: isSignUp ? name : email.split("@")[0].charAt(0).toUpperCase() + email.split("@")[0].slice(1),
-        isGuest: false,
-        joinedDate: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
-        birthdate: "1994-08-15",
-        bloodType: "A-Positive",
-        allergies: "Penicillin, Seasonal Pollen",
-        conditions: "Asthma, Mild Hypertension",
-        emergencyContact: "Sarah Millson (Spouse)",
-        emergencyPhone: "+1 (555) 901-4433"
-      };
-
-      localStorage.setItem("pulsepoint_user", JSON.stringify(provisionedUser));
-      onAuthChange(provisionedUser);
+    if (!agreeTerms) {
+      setAuthError("You must agree to the HIPAA secure storage and privacy disclosures.");
       setIsSubmitting(false);
-      playBeep(1100, 0.15);
+      return;
+    }
 
-      const completedOnboarding = localStorage.getItem("pulsepoint_onboarding_answers");
-      if (!completedOnboarding) {
-        setShowQuestions(true);
+    if (isSignUp && !name.trim()) {
+      setAuthError("Please enter your full medical credential name.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!email.includes("@")) {
+      setAuthError("A valid medical provider or personal email is required.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setAuthError("Security requirement: Password must be at least 6 characters.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      let firebaseUser;
+      if (isSignUp) {
+        const credential = await createUserWithEmailAndPassword(auth, email, password);
+        firebaseUser = credential.user;
+      } else {
+        const credential = await signInWithEmailAndPassword(auth, email, password);
+        firebaseUser = credential.user;
       }
-    }, 900);
+
+      if (firebaseUser) {
+        let profile = await getUserProfile(firebaseUser.uid);
+        if (!profile) {
+          profile = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: isSignUp ? name : firebaseUser.email?.split("@")[0].charAt(0).toUpperCase() + firebaseUser.email?.split("@")[0].slice(1) || "User",
+            isGuest: false,
+            joinedDate: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+            birthdate: "1994-08-15",
+            bloodType: "A-Positive",
+            allergies: "Penicillin, Seasonal Pollen",
+            conditions: "Asthma, Mild Hypertension",
+            emergencyContact: "Sarah Millson (Spouse)",
+            emergencyPhone: "+1 (555) 901-4433"
+          };
+          await saveUserProfile(firebaseUser.uid, profile);
+        }
+
+        const provisionedUser: AppUser = {
+          uid: firebaseUser.uid,
+          email: profile.email,
+          name: profile.displayName,
+          isGuest: false,
+          joinedDate: profile.joinedDate,
+          birthdate: profile.birthdate,
+          bloodType: profile.bloodType,
+          allergies: profile.allergies,
+          conditions: profile.conditions,
+          emergencyContact: profile.emergencyContact,
+          emergencyPhone: profile.emergencyPhone
+        };
+
+        localStorage.setItem("pulsepoint_user", JSON.stringify(provisionedUser));
+        onAuthChange(provisionedUser);
+        setIsSubmitting(false);
+        playBeep(1100, 0.15);
+
+        const completedOnboarding = localStorage.getItem("pulsepoint_onboarding_answers");
+        if (!completedOnboarding) {
+          setShowQuestions(true);
+        }
+      }
+    } catch (error: any) {
+      console.error(error);
+      let errMsg = "Authentication failed.";
+      if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
+        errMsg = "Invalid email or password credential.";
+      } else if (error.code === "auth/email-already-in-use") {
+        errMsg = "This email is already registered.";
+      } else {
+        errMsg = error.message || errMsg;
+      }
+      setAuthError(errMsg);
+      setIsSubmitting(false);
+    }
   };
 
   // Switch instantly to Guest mode for high-availability clinical lookup
-  const handleGuestContinue = () => {
+  const handleGuestContinue = async () => {
     playBeep(1000, 0.1);
     setIsSubmitting(true);
     
-    setTimeout(() => {
-      const guestUser: AppUser = {
-        email: null,
-        name: "Guest Practitioner",
-        isGuest: true,
-        joinedDate: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
-        birthdate: "1991-03-22",
-        bloodType: "O-Negative (Universal)",
-        allergies: "No known corporate allergens",
-        conditions: "Healthy Baseline",
-        emergencyContact: "Pulsepoint Emergency Dispatch Center",
-        emergencyPhone: "911 / Internal Dispatch"
-      };
+    try {
+      const credential = await signInAnonymously(auth);
+      const firebaseUser = credential.user;
       
-      localStorage.setItem("pulsepoint_user", JSON.stringify(guestUser));
-      onAuthChange(guestUser);
-      setIsSubmitting(false);
-      playBeep(1200, 0.12);
+      if (firebaseUser) {
+        let profile = await getUserProfile(firebaseUser.uid);
+        if (!profile) {
+          profile = {
+            uid: firebaseUser.uid,
+            email: null,
+            displayName: "Guest Practitioner",
+            isGuest: true,
+            joinedDate: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+            birthdate: "1991-03-22",
+            bloodType: "O-Negative (Universal)",
+            allergies: "No known corporate allergens",
+            conditions: "Healthy Baseline",
+            emergencyContact: "Pulsepoint Emergency Dispatch Center",
+            emergencyPhone: "911 / Internal Dispatch"
+          };
+          await saveUserProfile(firebaseUser.uid, profile);
+        }
 
-      const completedOnboarding = localStorage.getItem("pulsepoint_onboarding_answers");
-      if (!completedOnboarding) {
-        setShowQuestions(true);
+        const guestUser: AppUser = {
+          uid: firebaseUser.uid,
+          email: null,
+          name: profile.displayName,
+          isGuest: true,
+          joinedDate: profile.joinedDate,
+          birthdate: profile.birthdate,
+          bloodType: profile.bloodType,
+          allergies: profile.allergies,
+          conditions: profile.conditions,
+          emergencyContact: profile.emergencyContact,
+          emergencyPhone: profile.emergencyPhone
+        };
+        
+        localStorage.setItem("pulsepoint_user", JSON.stringify(guestUser));
+        onAuthChange(guestUser);
+        setIsSubmitting(false);
+        playBeep(1200, 0.12);
+
+        const completedOnboarding = localStorage.getItem("pulsepoint_onboarding_answers");
+        if (!completedOnboarding) {
+          setShowQuestions(true);
+        }
       }
-    }, 400);
+    } catch (error: any) {
+      console.error(error);
+      setAuthError("Guest sign-in failed. Please verify network connectivity.");
+      setIsSubmitting(false);
+    }
   };
 
   // Manage profile updates
-  const handleProfileSave = (e: FormEvent) => {
+  const handleProfileSave = async (e: FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
@@ -202,6 +283,22 @@ export default function UserProfile({ user, onAuthChange, setTab }: UserProfileP
       emergencyPhone: editEmergencyPhone,
     };
 
+    if (user.uid) {
+      try {
+        await saveUserProfile(user.uid, {
+          displayName: editName,
+          birthdate: editBirthdate,
+          bloodType: editBloodType,
+          allergies: editAllergies,
+          conditions: editConditions,
+          emergencyContact: editEmergencyContact,
+          emergencyPhone: editEmergencyPhone,
+        });
+      } catch (error) {
+        console.error("Error saving profile to Firestore:", error);
+      }
+    }
+
     localStorage.setItem("pulsepoint_user", JSON.stringify(updatedUser));
     onAuthChange(updatedUser);
     setIsEditing(false);
@@ -214,8 +311,11 @@ export default function UserProfile({ user, onAuthChange, setTab }: UserProfileP
   };
 
   // Secure Sign Out which clears state
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     playBeep(600, 0.2);
+    try {
+      await signOut(auth);
+    } catch (e) {}
     localStorage.removeItem("pulsepoint_user");
     onAuthChange(null);
     setShowQuestions(false);

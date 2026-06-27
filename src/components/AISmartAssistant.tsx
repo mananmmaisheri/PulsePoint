@@ -36,6 +36,7 @@ import {
   Check
 } from "lucide-react";
 import { ChatMessage } from "../types";
+import { AppUser } from "../App";
 
 interface TriageData {
   stage: "green" | "yellow" | "red";
@@ -89,7 +90,11 @@ const SUGGESTIONS = [
   }
 ];
 
-export default function AISmartAssistant() {
+interface AISmartAssistantProps {
+  user?: AppUser | null;
+}
+
+export default function AISmartAssistant({ user }: AISmartAssistantProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const saved = localStorage.getItem("pulsepoint_chats");
     return saved ? JSON.parse(saved) : [];
@@ -768,7 +773,7 @@ export default function AISmartAssistant() {
 
              <div className="space-y-1">
                <h2 className="text-2xl md:text-3xl font-display font-medium tracking-tight text-white leading-tight">
-                 Hello, <span className="bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent font-bold">Manan</span>
+                 Hello, <span className="bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent font-bold">{user ? user.name : "User"}</span>
                </h2>
                <h3 className="text-xs md:text-sm font-sans font-medium text-zinc-400 leading-normal max-w-lg mx-auto">
                  How can PulsePoint assist your wellness journey today?

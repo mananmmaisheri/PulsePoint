@@ -1,0 +1,97 @@
+{
+  "collections": {
+    "users": {
+      "schema": {
+        "uid": "string",
+        "email": "string",
+        "displayName": "string",
+        "onboarding": "map",
+        "createdAt": "timestamp",
+        "isGuest": "boolean"
+      },
+      "indexes": []
+    },
+    "medications": {
+      "schema": {
+        "id": "string",
+        "userId": "string",
+        "name": "string",
+        "dosage": "string",
+        "frequency": "string",
+        "time": "string",
+        "takenToday": "boolean",
+        "history": "array",
+        "createdAt": "timestamp"
+      },
+      "indexes": [
+        {
+          "fields": [
+            { "fieldPath": "userId", "order": "ASCENDING" },
+            { "fieldPath": "createdAt", "order": "DESCENDING" }
+          ]
+        }
+      ]
+    },
+    "vitals_history": {
+      "schema": {
+        "id": "string",
+        "userId": "string",
+        "timestamp": "timestamp",
+        "bpm": "integer",
+        "bloodOxygen": "integer",
+        "systolic": "integer",
+        "diastolic": "integer",
+        "temperature": "number",
+        "waterIntake": "integer",
+        "sleepHours": "number"
+      },
+      "indexes": [
+        {
+          "fields": [
+            { "fieldPath": "userId", "order": "ASCENDING" },
+            { "fieldPath": "timestamp", "order": "DESCENDING" }
+          ]
+        }
+      ]
+    },
+    "medical_records": {
+      "schema": {
+        "id": "string",
+        "userId": "string",
+        "fileName": "string",
+        "fileType": "string",
+        "uploadedAt": "timestamp",
+        "category": "string",
+        "summary": "string",
+        "doctorName": "string",
+        "fileData": "string"
+      },
+      "indexes": [
+        {
+          "fields": [
+            { "fieldPath": "userId", "order": "ASCENDING" },
+            { "fieldPath": "uploadedAt", "order": "DESCENDING" }
+          ]
+        }
+      ]
+    },
+    "sos_logs": {
+      "schema": {
+        "id": "string",
+        "userId": "string",
+        "timestamp": "timestamp",
+        "location": "map",
+        "status": "string",
+        "message": "string"
+      },
+      "indexes": [
+        {
+          "fields": [
+            { "fieldPath": "userId", "order": "ASCENDING" },
+            { "fieldPath": "timestamp", "order": "DESCENDING" }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -23,6 +23,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { EmergencyContact, HospitalResult } from "../types";
+import { addSOSLog, fetchSOSLogs } from "../lib/firebase";
 
 export default function EmergencySOS() {
   const [countdown, setCountdown] = useState(-1);
@@ -34,6 +35,28 @@ export default function EmergencySOS() {
   const [isMuted, setIsMuted] = useState(false);
   const [activeCallHotline, setActiveCallHotline] = useState<{ name: string; number: string; state: "ringing" | "connected" | "ended" } | null>(null);
   const [activeCallTimer, setActiveCallCallTimer] = useState(0);
+
+  // Database persistent user and history states
+  const [user] = useState(() => {
+    const saved = localStorage.getItem("pulsepoint_user");
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [sosHistory, setSosHistory] = useState<any[]>([]);
+
+  // Load past incident histories from Firestore on load
+  useEffect(() => {
+    if (user && user.uid) {
+      const loadHistory = async () => {
+        try {
+          const logs = await fetchSOSLogs(user.uid);
+          setSosHistory(logs);
+        } catch (e) {
+          console.error("Failed to load SOS incident history logs:", e);
+        }
+      };
+      loadHistory();
+    }
+  }, [user]);
 
   // Contact form state
   const [newContact, setNewContact] = useState({
@@ -263,16 +286,54 @@ export default function EmergencySOS() {
     startSiren(); // Direct immediate siren audio play
   };
 
-  const cancelSOS = () => {
+  const cancelSOS = async () => {
     stopSiren();
     setSosState("cancelled");
     setCountdown(-1);
+
+    if (user && user.uid) {
+      try {
+        const newLog = {
+          userId: user.uid,
+          timestamp: new Date(),
+          location: location || { lat: 28.6139, lng: 77.2090 },
+          status: "resolved" as const,
+          message: "SOS Aborted / Resolved by User"
+        };
+        const docId = await addSOSLog(newLog);
+        setSosHistory(prev => [{ id: docId, ...newLog }, ...prev]);
+      } catch (error) {
+        console.error("Error logging SOS cancel to Firestore:", error);
+      }
+    }
+
     setTimeout(() => setSosState("idle"), 2200);
   };
 
-  const triggerSOSActivation = () => {
+  const triggerSOSActivation = async () => {
     setSosState("activated");
     startSiren();
+
+    let finalLat = 28.6139;
+    let finalLng = 77.2090;
+
+    const recordActivation = async (lat: number, lng: number) => {
+      if (user && user.uid) {
+        try {
+          const newLog = {
+            userId: user.uid,
+            timestamp: new Date(),
+            location: { lat, lng },
+            status: "triggered" as const,
+            message: "Emergency SOS Activated by User"
+          };
+          const docId = await addSOSLog(newLog);
+          setSosHistory(prev => [{ id: docId, ...newLog }, ...prev]);
+        } catch (error) {
+          console.error("Error logging SOS trigger to Firestore:", error);
+        }
+      }
+    };
 
     // Retrieve and coordinate live position
     if (navigator.geolocation) {
@@ -282,20 +343,19 @@ export default function EmergencySOS() {
           const lng = pos.coords.longitude;
           setLocation({ lat, lng });
           fetchNearbyHospitals(lat, lng);
+          recordActivation(lat, lng);
         },
         (err) => {
-          const lat = 28.6139; // default New Delhi backup
-          const lng = 77.2090;
-          setLocation({ lat, lng });
-          fetchNearbyHospitals(lat, lng);
+          setLocation({ lat: finalLat, lng: finalLng });
+          fetchNearbyHospitals(finalLat, finalLng);
+          recordActivation(finalLat, finalLng);
         },
         { enableHighAccuracy: true, timeout: 6000 }
       );
     } else {
-      const lat = 28.6139;
-      const lng = 77.2090;
-      setLocation({ lat, lng });
-      fetchNearbyHospitals(lat, lng);
+      setLocation({ lat: finalLat, lng: finalLng });
+      fetchNearbyHospitals(finalLat, finalLng);
+      recordActivation(finalLat, finalLng);
     }
   };
 
@@ -827,6 +887,48 @@ export default function EmergencySOS() {
               </div>
             ) : (
               <p className="text-xs text-foreground/30 text-center py-6">No emergency grids identified nearby.</p>
+            )}
+          </div>
+
+          {/* Past SOS History Database Logs */}
+          <div className="border border-white/5 bg-gray-950/20 backdrop-blur-md rounded-3xl p-6 shadow-xl text-left">
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Clock className="h-4.5 w-4.5 text-rose-400" />
+              EHR Registered SOS History
+            </h3>
+
+            {sosHistory.length > 0 ? (
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                {sosHistory.map((log, i) => {
+                  const logDate = log.timestamp?.toDate ? log.timestamp.toDate() : new Date(log.timestamp);
+                  return (
+                    <div key={log.id || i} className="p-2.5 bg-black/40 border border-white/5 rounded-xl text-[11px] flex justify-between items-start gap-3">
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`h-1.5 w-1.5 rounded-full ${log.status === 'triggered' ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`} />
+                          <span className="font-bold text-zinc-200 capitalize text-[10px]">{log.status}</span>
+                        </div>
+                        <p className="text-zinc-400 mt-1 font-sans text-[10.5px]">{log.message}</p>
+                        {log.location && (
+                          <span className="text-[9px] text-zinc-500 font-mono block mt-1">
+                            GPS Coordinates: {log.location.lat.toFixed(4)}, {log.location.lng.toFixed(4)}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[8px] font-mono text-zinc-500 shrink-0">
+                        {logDate.toLocaleDateString()} {logDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-6 border border-dashed border-white/5 rounded-2xl text-center">
+                <Clock className="h-5 w-5 text-foreground/10 mb-1" />
+                <p className="text-[10px] text-foreground/40 leading-normal">
+                  No previous emergency incidents logged in the Firestore database.
+                </p>
+              </div>
             )}
           </div>
 

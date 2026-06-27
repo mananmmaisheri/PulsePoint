@@ -4,6 +4,7 @@ import dns from "dns";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import fs from "fs";
 
 // Load environment variables
 dotenv.config();
@@ -17,6 +18,20 @@ const ai = new GoogleGenAI({
     },
   },
 });
+
+// Load the PulsePoint disease database from diseases.json
+let diseasesData: any[] = [];
+try {
+  const filePath = path.join(process.cwd(), "src/data/diseases.json");
+  if (fs.existsSync(filePath)) {
+    diseasesData = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    console.log(`Loaded ${diseasesData.length} diseases successfully from diseases.json`);
+  } else {
+    console.warn(`diseases.json not found at ${filePath}`);
+  }
+} catch (err) {
+  console.error("Failed to load diseases.json:", err);
+}
 
 
 // Helper: Calculate Haversine distance in km
@@ -92,6 +107,8 @@ async function getOsmHospitals(lat: number, lng: number, searchTerm: string): Pr
       searchQueries = ["pediatric clinic", "children medical", "children hospital", "clinic"];
     } else if (term.includes("pharmacy") || term.includes("chemist")) {
       searchQueries = ["pharmacy", "chemist", "drugstore"];
+    } else if (term.includes("laboratory") || term.includes("lab") || term.includes("diagnostic") || term.includes("blood test") || term.includes("sugar") || term.includes("urine")) {
+      searchQueries = ["diagnostic laboratory", "pathology laboratory", "medical laboratory", "clinic", "hospital"];
     }
 
     // Prepare bounded box parameters around the user's coordinates (approx. 20km radius)
@@ -292,6 +309,55 @@ async function getLocalizedDoctors(lat: number, lng: number): Promise<any[]> {
 // State-aware professional doctor-style clinical offline triage state machine
 function getOfflineTriageResponse(message: string, chatHistory: any[], defaultMockDoctors: any[], areaName: string) {
   const userMsg = message.toLowerCase();
+  
+  // Attempt to match symptoms or name with our official diseases database for better offline answers too!
+  let matchedDisease: any = null;
+  if (diseasesData && diseasesData.length > 0) {
+    // 1. Check direct name match
+    matchedDisease = diseasesData.find(d => 
+      userMsg.includes(d.diseaseName.toLowerCase()) || 
+      d.diseaseName.toLowerCase().includes(userMsg)
+    );
+    // 2. If no direct name match, check symptoms match
+    if (!matchedDisease) {
+      const bestMatches = diseasesData.map(d => {
+        const matchingSymptoms = d.symptoms.filter((sym: string) => userMsg.includes(sym.toLowerCase()));
+        return { disease: d, score: matchingSymptoms.length };
+      }).filter(m => m.score > 0)
+        .sort((a, b) => b.score - a.score);
+      
+      if (bestMatches.length > 0) {
+        matchedDisease = bestMatches[0].disease;
+      }
+    }
+  }
+
+  if (matchedDisease) {
+    const d = matchedDisease;
+    const isCritical = d.severity === "critical" || d.severity === "severe";
+    return {
+      reply: `💚 **PulsePoint Clinical Guideline (Offline Fallback for ${d.diseaseName})**\n\n**Description**: ${d.description}\n\n**Symptoms**: ${d.symptoms.join(", ")}\n\n**First Aid**: ${d.firstAid.join(" ")}\n\n**Prevention**: ${d.prevention.join(" ")}\n\n**Doctor's Guideline**: ${d.whenToVisitDoctor}\n\n*Note: This response is retrieved from PulsePoint's clinical offline disease database.*`,
+      triage: {
+        stage: isCritical ? (d.emergency ? "red" : "yellow") : "green",
+        percentage: d.severity === "critical" ? 85 : d.severity === "severe" ? 65 : d.severity === "moderate" ? 45 : 15,
+        chronicDisease: d.diseaseName,
+        remedies: d.prevention.map((p: string) => `• ${p}`).join("\n"),
+        medicines: d.medications.join(", ") || "Seek medical advice for prescription options.",
+        diets: {
+          veg: `Standard vegetarian meals matching ${d.diseaseName} recovery. Avoid spicy/fried foods.`,
+          non_veg: `Mild non-vegetarian meals or soups matching ${d.diseaseName} recovery.`,
+          vegan: `Fresh local fruits, light lentils, and steamed rice.`,
+          keto: `Healthy low-carbohydrate foods like sautéed paneer or tofu with turmeric.`
+        },
+        doctors: defaultMockDoctors,
+        emergency: {
+          ambulance: ["102", "112"],
+          nearbyHospitals: defaultMockDoctors[0]?.address || "Local Community Health Centre (CHC)",
+          notificationTriggered: isCritical && d.emergency
+        }
+      }
+    };
+  }
   
   // Trace conversation history to check if we previously posed diagnostic questions
   let hasAskedQuestions = false;
@@ -516,6 +582,9 @@ async function startServer() {
       const systemInstruction = 
         "You are PulsePoint AI, an elite Indian clinical triage assistant, emergency response expert, and empathetic family health guide. " +
         "You analyze a user's described symptoms (including chronic conditions), determine their diagnostic severity stage, and return custom localized advice.\n\n" +
+        "OFFICIAL PULSEPOINT DISEASE AND ILLNESS DATABASE:\n" +
+        "You have direct access to the entire curated PulsePoint medical dataset. Use this database as your primary medical source of truth to identify illnesses/diseases, check symptom clusters, list exact causes, risk factors, emergency signs, detailed dadi-maa herbal remedies, safe OTC medications, prevention guidelines, and recommended clinical specialists:\n" +
+        `${JSON.stringify(diseasesData)}\n\n` +
         "CRITICAL RULES:\n" +
         "1. You MUST respond ONLY with a valid, clean JSON object. Do not include markdown wraps like ```json in your output. No preamble or postamble.\n" +
         "2. The JSON schema must strictly contain:\n" +

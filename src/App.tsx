@@ -1,5 +1,7 @@
-import { useState, startTransition } from "react";
+import { useState, startTransition, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, getUserProfile, UserProfileData } from "./lib/firebase";
 
 // Import modular components
 import BackgroundVideo from "./components/BackgroundVideo";
@@ -12,7 +14,8 @@ import HomepageScrollSections from "./components/HomepageScrollSections";
 import Footer from "./components/Footer";
 import UserProfile from "./components/UserProfile";
 
-interface AppUser {
+export interface AppUser {
+  uid?: string;
   email: string | null;
   name: string;
   isGuest: boolean;
@@ -21,6 +24,9 @@ interface AppUser {
   allergies?: string;
   conditions?: string;
   joinedDate?: string;
+  avatarUrl?: string;
+  emergencyContact?: string;
+  emergencyPhone?: string;
 }
 
 export default function App() {
@@ -36,6 +42,50 @@ export default function App() {
     }
     return null;
   });
+
+  // Observe Firebase Auth state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // Fetch user details from Firestore
+        const profile = await getUserProfile(firebaseUser.uid);
+        if (profile) {
+          const appUser: AppUser = {
+            uid: firebaseUser.uid,
+            email: profile.email,
+            name: profile.displayName,
+            isGuest: profile.isGuest,
+            birthdate: profile.birthdate,
+            bloodType: profile.bloodType,
+            allergies: profile.allergies,
+            conditions: profile.conditions,
+            emergencyContact: profile.emergencyContact,
+            emergencyPhone: profile.emergencyPhone,
+            joinedDate: profile.joinedDate,
+          };
+          localStorage.setItem("pulsepoint_user", JSON.stringify(appUser));
+          setUser(appUser);
+        } else {
+          // If no profile exists yet in firestore, we don't overwrite if we have a provisional one,
+          // but we can default create one or wait for UserProfile to handle registration/save.
+          const localSaved = localStorage.getItem("pulsepoint_user");
+          if (localSaved) {
+            try {
+              const parsed = JSON.parse(localSaved);
+              if (parsed.uid === firebaseUser.uid) {
+                setUser(parsed);
+                return;
+              }
+            } catch (e) {}
+          }
+        }
+      } else {
+        localStorage.removeItem("pulsepoint_user");
+        setUser(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Navigation tabs routing state: "home" | "pulsepoint" | "features" | "profile"
   const [currentTab, setTabState] = useState<string>("home");
@@ -152,7 +202,7 @@ export default function App() {
               className="w-full bg-slate-950/80 border border-white/10 rounded-3xl p-1.5 md:p-2.5 shadow-2xl backdrop-blur-2xl flex-1 flex flex-col h-full overflow-hidden"
             >
               <div className="flex-1 flex flex-col overflow-hidden">
-                <AISmartAssistant />
+                <AISmartAssistant user={user} />
               </div>
             </motion.div>
           </div>

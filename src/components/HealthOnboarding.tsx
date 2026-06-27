@@ -27,7 +27,12 @@ import {
   Clock,
   Eye,
   RefreshCw,
-  Check
+  Check,
+  MapPin,
+  Calendar,
+  Search,
+  Compass,
+  Navigation
 } from "lucide-react";
 
 interface OnboardingData {
@@ -141,6 +146,148 @@ export default function HealthOnboarding() {
       playBeep(1300, 0.2);
     }, 1500);
   };
+
+  // Custom Laboratory Finder & Remedies / Diet States
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number }>({ lat: 28.6139, lng: 77.2090 });
+  const [labSearchAddr, setLabSearchAddr] = useState("New Delhi, India");
+  const [labSearchText, setLabSearchText] = useState("");
+  const [labsLoading, setLabsLoading] = useState(false);
+  const [discoveredLabs, setDiscoveredLabs] = useState<any[]>([]);
+  const [selectedLab, setSelectedLab] = useState<any | null>(null);
+  const [selectedTest, setSelectedTest] = useState<"Blood Test" | "Blood Sugar Test" | "Urine Analysis">("Blood Test");
+  const [labBookingSlot, setLabBookingSlot] = useState("");
+  const [labBookingPhone, setLabBookingPhone] = useState("");
+  const [labBookingCompleted, setLabBookingCompleted] = useState(false);
+  const [labBookingSuccessId, setLabBookingSuccessId] = useState("");
+  
+  const [dietPlan, setDietPlan] = useState<{
+    title: string;
+    dailyCalorieTarget: string;
+    breakfast: string;
+    lunch: string;
+    dinner: string;
+    snacks: string;
+    avoid: string;
+  } | null>(null);
+  
+  const [recommendedRemedies, setRecommendedRemedies] = useState<string[]>([]);
+
+  const searchNearbyLabs = async (latVal: number, lngVal: number, customSearchName = "") => {
+    setLabsLoading(true);
+    try {
+      const q = customSearchName.trim() ? `${customSearchName} laboratory` : "diagnostic laboratory";
+      const res = await fetch("/api/locate-hospitals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          latitude: latVal,
+          longitude: lngVal,
+          query: q,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.groundingChunks && Array.isArray(data.groundingChunks) && data.groundingChunks.length > 0) {
+          const parsed = data.groundingChunks.map((chunk: any) => ({
+            title: chunk.maps?.title || "Pathology & Diagnostics Lab",
+            address: chunk.maps?.address || "Clinical Laboratory Center",
+            uri: chunk.maps?.uri || `https://maps.google.com/?q=${encodeURIComponent(chunk.maps?.title || "Laboratory")}`,
+            distance: chunk.maps?.distance || 0.85,
+            latitude: chunk.maps?.latLng?.latitude,
+            longitude: chunk.maps?.latLng?.longitude,
+          }));
+          setDiscoveredLabs(parsed);
+          setSelectedLab(parsed[0]);
+        } else {
+          // fallback
+          const fallbackLabs = [
+            { title: "PulsePoint Elite Pathology Lab", address: `Sector 4, Near Clinical Block, ${labSearchAddr}`, distance: 0.8, uri: "https://maps.google.com" },
+            { title: "Metro Diagnostic Laboratory", address: `Main Ring Road, Opposite Civic Tower, ${labSearchAddr}`, distance: 1.5, uri: "https://maps.google.com" },
+            { title: "Apollo Diagnostics & Care", address: `Avenue 12, Health Plaza, ${labSearchAddr}`, distance: 2.3, uri: "https://maps.google.com" },
+            { title: "Care Pathology & Blood Draw", address: `Lane 3, Medical Enclave, ${labSearchAddr}`, distance: 3.1, uri: "https://maps.google.com" },
+          ];
+          setDiscoveredLabs(fallbackLabs);
+          setSelectedLab(fallbackLabs[0]);
+        }
+      } else {
+        throw new Error("Failed response");
+      }
+    } catch (err) {
+      console.error(err);
+      const fallbackLabs = [
+        { title: "PulsePoint Elite Pathology Lab", address: `Sector 4, Near Clinical Block, New Delhi`, distance: 0.8, uri: "https://maps.google.com" },
+        { title: "Metro Diagnostic Laboratory", address: `Main Ring Road, Opposite Civic Tower, New Delhi`, distance: 1.5, uri: "https://maps.google.com" },
+        { title: "Apollo Diagnostics & Care", address: `Avenue 12, Health Plaza, New Delhi`, distance: 2.3, uri: "https://maps.google.com" },
+        { title: "Care Pathology & Blood Draw", address: `Lane 3, Medical Enclave, New Delhi`, distance: 3.1, uri: "https://maps.google.com" },
+      ];
+      setDiscoveredLabs(fallbackLabs);
+      setSelectedLab(fallbackLabs[0]);
+    } finally {
+      setLabsLoading(false);
+    }
+  };
+
+  const geocodeAndSearchLabs = async (locationText: string) => {
+    if (!locationText.trim()) return;
+    setLabsLoading(true);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(locationText)}&format=json&limit=1`, {
+        headers: { "Accept-Language": "en", "User-Agent": "PulsePoint-Clinical-Assistant/1.0" }
+      });
+      const data = await res.json();
+      if (data && data.length > 0) {
+        const newLat = parseFloat(data[0].lat);
+        const newLng = parseFloat(data[0].lon);
+        setUserCoords({ lat: newLat, lng: newLng });
+        
+        const parts = data[0].display_name.split(",");
+        const shortName = parts.slice(0, 3).join(", ");
+        setLabSearchAddr(shortName);
+        searchNearbyLabs(newLat, newLng);
+      } else {
+        searchNearbyLabs(userCoords.lat, userCoords.lng, locationText);
+      }
+    } catch (e) {
+      console.error(e);
+      searchNearbyLabs(userCoords.lat, userCoords.lng, locationText);
+    }
+  };
+
+  const handleBookLabTest = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedLab || !labBookingSlot || !labBookingPhone) return;
+    setIsBookingSubmitting(true);
+    playBeep(900, 0.1);
+    setTimeout(() => {
+      setIsBookingSubmitting(false);
+      setLabBookingCompleted(true);
+      const randomId = "LAB-" + Math.floor(100000 + Math.random() * 900000);
+      setLabBookingSuccessId(randomId);
+      playBeep(1300, 0.2);
+    }, 1200);
+  };
+
+  // Auto locate laboratories near user on completion
+  useEffect(() => {
+    if (onboardingComplete) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const latVal = pos.coords.latitude;
+            const lngVal = pos.coords.longitude;
+            setUserCoords({ lat: latVal, lng: lngVal });
+            setLabSearchAddr("Active GPS Coordinates Detected");
+            searchNearbyLabs(latVal, lngVal);
+          },
+          () => {
+            searchNearbyLabs(28.6139, 77.2090);
+          }
+        );
+      } else {
+        searchNearbyLabs(28.6139, 77.2090);
+      }
+    }
+  }, [onboardingComplete]);
 
   // Sound feedback system
   const playBeep = (freq = 800, duration = 0.08) => {
@@ -403,6 +550,88 @@ export default function HealthOnboarding() {
       } else {
         setExtractedValues(null);
       }
+
+      // Generate Custom Remedies & Diet Plans
+      let remediesList: string[] = [];
+      let customDiet = {
+        title: "Balanced Homeostasis Meal Plan",
+        dailyCalorieTarget: "1800 Kcal",
+        breakfast: "Quinoa porridge with almond milk, chia seeds, and berries.",
+        lunch: "Mixed vegetable salad with tofu, chickpeas, extra-virgin olive oil.",
+        dinner: "Steamed chicken breast or brown lentils with sautéed zucchini and broccoli.",
+        snacks: "Roasted pumpkin seeds, raw walnuts, celery sticks.",
+        avoid: "Processed sugars, refined white rice, excess table salt, trans-fats."
+      };
+
+      if (diabetesRisk === "High" || diabetesRisk === "Medium") {
+        remediesList.push("Cinnamon Bark Supplementation: 1g daily to improve insulin receptor sensitivity.");
+        remediesList.push("Apple Cider Vinegar: 1-2 tbsp diluted in water before major meals to blunt postprandial glucose spikes.");
+        remediesList.push("Chromium Picolinate: 200mcg daily to support healthy carbohydrate metabolism.");
+        
+        customDiet.title = "Low-Glycemic Index Metabolic Meal Plan";
+        customDiet.dailyCalorieTarget = "1600 Kcal";
+        customDiet.breakfast = "Scrambled egg whites or tofu scramble with baby spinach and avocado slices.";
+        customDiet.lunch = "Grilled lemon chicken breast or tempeh salad with baked asparagus and leafy greens.";
+        customDiet.dinner = "Pan-seared salmon or cooked black beans with steamed cauliflower and garlic olive oil.";
+        customDiet.snacks = "Raw almonds, cucumbers with hummus, or half a cup of Greek yogurt.";
+        customDiet.avoid = "White bread, white potatoes, tropical fruit juices, baked goods, artificial sweeteners.";
+      }
+      
+      if (heartRisk === "High" || heartRisk === "Medium") {
+        remediesList.push("Omega-3 EPA/DHA Fatty Acids: 1000mg to aid endothelial function and manage lipid plaques.");
+        remediesList.push("Garlic Extract (Allicin): 600mg daily to maintain structural arterial elasticity.");
+        remediesList.push("Coenzyme Q10 (CoQ10): 100mg daily to support cellular cardiac bioenergetics.");
+        
+        if (customDiet.title === "Balanced Homeostasis Meal Plan") {
+          customDiet.title = "Cardiovascular DASH / Mediterranean Diet";
+          customDiet.dailyCalorieTarget = "1700 Kcal";
+          customDiet.breakfast = "Steel-cut oats topped with ground flaxseed, walnuts, and wild blueberries.";
+          customDiet.lunch = "Quinoa and roasted vegetables with olive oil, squeezed lemon, and low-sodium sardines/lentils.";
+          customDiet.dinner = "Grilled cod filet or baked kidney beans with steamed spinach and extra-virgin olive oil.";
+          customDiet.snacks = "A handful of raw walnuts, sunflower seeds, or a small green apple.";
+          customDiet.avoid = "Saturated animal fats, butter, palm oil, heavy processed cheese, high-sodium broths.";
+        }
+      }
+
+      if (hypertensionRisk === "High" || hypertensionRisk === "Medium") {
+        remediesList.push("Magnesium Bisglycinate: 350mg daily to induce smooth vascular muscle relaxation.");
+        remediesList.push("Beetroot Powder or Juice: Rich in dietary nitrates to trigger nitric oxide vasodilation.");
+        remediesList.push("Potassium Citrate: If cleared by renal metrics, 99mg to offset cellular sodium accumulation.");
+        
+        if (customDiet.title === "Balanced Homeostasis Meal Plan") {
+          customDiet.title = "Sodium-Restricted DASH Vitality Diet";
+          customDiet.dailyCalorieTarget = "1750 Kcal";
+          customDiet.breakfast = "Chia seed pudding with unsweetened almond milk and sliced strawberries.";
+          customDiet.lunch = "Spinach and baby kale salad with baked salmon, pumpkin seeds, and low-sodium balsamic dressing.";
+          customDiet.dinner = "Boiled lentils, brown rice, and steamed zucchini seasoned with fresh herbs and zero added salt.";
+          customDiet.snacks = "Celery sticks with raw almond butter or fresh orange slices.";
+          customDiet.avoid = "Canned soups, soy sauce, pickles, processed meats, bakery items with baking soda.";
+        }
+      }
+
+      if (obesityRisk === "High") {
+        remediesList.push("Green Tea Extract (EGCG): 400mg daily to naturally support fat oxidation and metabolic rate.");
+        remediesList.push("Soluble Glucomannan Fiber: 1g taken with water 30 minutes before meals to promote early satiety.");
+        remediesList.push("L-Carnitine: 1000mg daily to facilitate mitochondrial fatty acid transport.");
+        
+        customDiet.title = "Calorie-Optimized High-Satiety Diet";
+        customDiet.dailyCalorieTarget = "1500 Kcal";
+        customDiet.breakfast = "High-protein whey or pea protein shake with spinach, chia seeds, and sugar-free water.";
+        customDiet.lunch = "Large mixed greens bowl with grilled chicken breasts, cherry tomatoes, and cucumber.";
+        customDiet.dinner = "Steamed white fish or boiled split peas with double broccoli and a splash of lemon.";
+        customDiet.snacks = "Low-fat cottage cheese or boiled egg whites.";
+        customDiet.avoid = "Liquid calories, energy drinks, white pasta, sugary cereals, snack chips.";
+      }
+
+      // Safeguard default remedies
+      if (remediesList.length === 0) {
+        remediesList.push("Coenzyme Q10 (CoQ10): 100mg to support cellular cardiovascular energy.");
+        remediesList.push("Magnesium Bisglycinate: 200mg to assist skeletal and muscle recovery.");
+        remediesList.push("Omega-3 EPA/DHA Fatty Acids: 500mg daily to support continuous brain and joint health.");
+      }
+
+      setRecommendedRemedies(remediesList);
+      setDietPlan(customDiet);
 
       setHealthScore(computedScore);
       setRiskLevels({
@@ -1379,10 +1608,10 @@ export default function HealthOnboarding() {
             </div>
 
             {/* Diagnostic Layout Core Summary Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
-              {/* Card 1: Somatic Command Center (Score + Patient Details) (Col: 5) */}
-              <div className="lg:col-span-5 space-y-6">
+              {/* Column 1: Patient Vital Ledger & Score Card */}
+              <div className="space-y-6">
                 
                 {/* Visual Circular Diagnostic score badge */}
                 <div className="p-6 border border-white/10 bg-gradient-to-br from-[#0a0a14] to-slate-950/90 rounded-3xl relative overflow-hidden flex flex-col items-center justify-center text-center shadow-xl backdrop-blur-2xl">
@@ -1430,120 +1659,133 @@ export default function HealthOnboarding() {
                       <span className="text-[10px] text-zinc-400 font-mono tracking-widest font-extrabold mt-1">/100 PTS</span>
                     </div>
                   </div>
-
-                  <div className="mt-5 p-4 bg-white/[0.02] border border-white/5 rounded-2xl text-xs sm:text-sm font-sans text-zinc-300 max-w-sm leading-relaxed text-center">
+ 
+                  <div className="mt-5 p-4 bg-white/[0.02] border border-white/5 rounded-2xl text-xs sm:text-sm font-sans text-zinc-300 max-w-sm leading-relaxed text-center w-full">
                     {healthScore >= 80 ? (
-                      <span className="text-emerald-400 font-bold block text-sm mb-1.5 flex items-center justify-center gap-1.5">
+                      <span className="text-emerald-400 font-bold block text-xs uppercase tracking-wider mb-1.5 flex items-center justify-center gap-1.5">
                         <CheckCircle className="h-4 w-4" /> Healthy Somatic Baseline
                       </span>
                     ) : healthScore >= 55 ? (
-                      <span className="text-amber-400 font-bold block text-sm mb-1.5 flex items-center justify-center gap-1.5">
+                      <span className="text-amber-400 font-bold block text-xs uppercase tracking-wider mb-1.5 flex items-center justify-center gap-1.5">
                         <AlertTriangle className="h-4 w-4" /> Moderate Risk Detected
                       </span>
                     ) : (
-                      <span className="text-rose-400 font-bold block text-sm mb-1.5 flex items-center justify-center gap-1.5">
+                      <span className="text-rose-400 font-bold block text-xs uppercase tracking-wider mb-1.5 flex items-center justify-center gap-1.5">
                         <AlertTriangle className="h-4 w-4 text-rose-500 animate-pulse" /> Urgent Risk Warnings
                       </span>
                     )}
-                    <span>Dynamic metabolic evaluation recommends focusing on high-priority recommendations to recover homeostasis.</span>
+                    <span className="text-xs">Dynamic metabolic evaluation recommends focusing on high-priority recommendations to recover homeostasis.</span>
                   </div>
                 </div>
-
-                {/* Digital Patient Ledger Sheet */}
+ 
+                {/* Digital Patient Ledger Sheet (Patient Vital Record) */}
                 <div className="p-6 border border-white/10 bg-slate-950/80 rounded-3xl relative overflow-hidden text-left shadow-lg">
                   <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-sky-500/20 via-violet-500/20 to-transparent" />
                   
                   <h4 className="text-xs uppercase font-mono tracking-widest font-extrabold text-sky-400 block mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
-                    <User className="h-4.5 w-4.5 text-sky-400" />
+                    <User className="h-4 w-4 text-sky-400" />
                     Patient Vital Record
                   </h4>
-
-                  <div className="grid grid-cols-2 gap-4 text-xs font-mono">
-                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
-                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-1">Full Patient Name</span>
-                      <span className="text-sm font-bold text-white block truncate">{formData.fullName || "Unregistered Patient"}</span>
+ 
+                  <div className="grid grid-cols-2 gap-3 text-xs font-mono">
+                    <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl col-span-2">
+                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-0.5">Full Patient Name</span>
+                      <span className="text-xs font-bold text-white block truncate">{formData.fullName || "Unregistered Patient"}</span>
                     </div>
-                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
-                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-1">Age / Assigned Gender</span>
-                      <span className="text-sm font-bold text-white block">{formData.age} Yrs • {formData.gender}</span>
+                    <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-0.5">Age & Gender</span>
+                      <span className="text-xs font-bold text-white block">{formData.age} Yrs • {formData.gender}</span>
                     </div>
-                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
-                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-1">Calculated BMI Metrics</span>
-                      <span className="text-sm font-bold text-white block">
-                        {bmi} <span className="text-[10px] text-zinc-400 font-normal">({bmiCategory})</span>
+                    <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-0.5">Body Mass Index</span>
+                      <span className="text-xs font-bold text-white block">
+                        {bmi} <span className="text-[8px] text-zinc-400 font-normal">({bmiCategory})</span>
                       </span>
                     </div>
-                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
-                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-1">Basal Metabolic Rate</span>
-                      <span className="text-sm font-bold text-violet-300 block">{dynamicBmr} Kcal/day</span>
+                    <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-0.5">Basal Metabolism</span>
+                      <span className="text-xs font-bold text-violet-300 block">{dynamicBmr} Kcal</span>
                     </div>
-                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl col-span-2">
-                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-1">Fluid Consumption target</span>
-                      <span className="text-sm font-bold text-sky-300 block flex items-center gap-1.5">
-                        <Droplet className="h-4 w-4 text-sky-400 fill-sky-400/20 shrink-0" />
-                        {dynamicFluid} Liters / Day Quota
-                      </span>
+                    <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-0.5">Dietary Profile</span>
+                      <span className="text-xs font-bold text-emerald-400 block">{formData.dietType}</span>
+                    </div>
+                    <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-0.5">Hydration Target</span>
+                      <span className="text-xs font-bold text-sky-400 block">{dynamicFluid} L / Day</span>
+                    </div>
+                    <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-0.5">Daily Sleep Cycle</span>
+                      <span className="text-xs font-bold text-zinc-300 block">{formData.sleep}</span>
+                    </div>
+                    <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl col-span-2">
+                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-0.5">Physiological Stress Baseline</span>
+                      <span className="text-xs font-bold text-rose-400 block">{formData.stressLevel} Severity Strain</span>
                     </div>
                   </div>
                 </div>
-
+ 
+              </div>
+              
+              {/* Column 2: Risks & Remedies Engine */}
+              <div className="space-y-6">
+                
                 {/* Chronic Disease Risk Levels metrics */}
-                <div className="p-6 border border-white/10 bg-[#070712]/90 rounded-3xl relative overflow-hidden text-left shadow-lg h-full flex flex-col justify-between">
+                <div className="p-6 border border-white/10 bg-[#070712]/90 rounded-3xl relative overflow-hidden text-left shadow-lg">
                   <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-red-500/20 via-violet-500/20 to-transparent" />
                   
                   <div>
-                    <h4 className="text-sm uppercase font-mono tracking-wider font-bold text-violet-300 block mb-4 flex items-center justify-between border-b border-white/5 pb-2">
-                      <span className="flex items-center gap-2">
-                        <ShieldCheck className="h-5 w-5 text-violet-400" />
-                        Somatic Chronic Disease Risk Levels
+                    <h4 className="text-xs uppercase font-mono tracking-widest font-extrabold text-violet-300 block mb-4 flex items-center justify-between border-b border-white/5 pb-2">
+                      <span className="flex items-center gap-1.5">
+                        <Activity className="h-4 w-4 text-violet-400" />
+                        Chronic Disease Risk Levels
                       </span>
-                      <span className="text-[10px] text-zinc-500 font-mono font-normal">Somatic Risk Vector</span>
                     </h4>
-
-                    <div className="space-y-5">
+ 
+                    <div className="space-y-4">
                       {[
                         { 
                           key: "diabetes", 
                           title: "Diabetes Mellitus Type-II", 
                           level: riskLevels.diabetes,
-                          desc: "Monitors insulin resistance indicators based on activity, lifestyle, and diagnostic sugar metrics."
+                          desc: "Insulin sensitivity evaluated from symptoms and weight vectors."
                         },
                         { 
                           key: "heart", 
-                          title: "Coronary Artery Pathology", 
+                          title: "Coronary Artery Risk", 
                           level: riskLevels.heart,
-                          desc: "Determines cardiovascular stress markers from exercise habits, smoking history, and family heredity."
+                          desc: "Cardiovascular friction indices compiled from lifestyle stressors."
                         },
                         { 
                           key: "hypertension", 
-                          title: "Hypertensive Vascular Risk", 
+                          title: "Hypertensive Vascular Load", 
                           level: riskLevels.hypertension,
-                          desc: "Monitors vascular load indices influenced by age, salt intake habits, and chronic stressors."
+                          desc: "Vascular resistance factors computed from family history and salt intake."
                         },
                         { 
                           key: "obesity", 
-                          title: "Obesity / Adipose Lipid Burden", 
+                          title: "Obesity / Adipose Burden", 
                           level: riskLevels.obesity,
-                          desc: "Indicates musculoskeletal strain and adipose distribution computed from dynamic BMI indicators."
+                          desc: "Adipose tissue index derived dynamically from biometric height/weight ratios."
                         }
                       ].map((m) => {
                         const percentage = m.level === "High" ? 85 : m.level === "Medium" ? 50 : 20;
                         const levelColor = m.level === "High" ? "text-rose-400 bg-rose-500/10 border-rose-500/20" : m.level === "Medium" ? "text-amber-400 bg-amber-500/10 border-amber-500/20" : "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
                         
                         return (
-                          <div key={m.key} className="p-4 bg-white/[0.01] border border-white/5 rounded-2xl space-y-2.5 hover:bg-white/[0.02] transition-colors text-left">
+                          <div key={m.key} className="p-3.5 bg-white/[0.01] border border-white/5 rounded-2xl space-y-1.5 hover:bg-white/[0.02] transition-colors text-left">
                             <div className="flex justify-between items-center">
                               <div>
-                                <span className="text-zinc-200 font-bold text-sm sm:text-base block">{m.title}</span>
+                                <span className="text-zinc-200 font-bold text-xs block">{m.title}</span>
                                 <span className="text-[10px] text-zinc-500 leading-normal block mt-0.5">{m.desc}</span>
                               </div>
-                              <span className={`text-xs font-mono font-bold uppercase px-3 py-1 rounded-lg border shrink-0 ${levelColor}`}>
+                              <span className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded border shrink-0 ${levelColor}`}>
                                 {m.level}
                               </span>
                             </div>
                             
                             {/* Meter line progress */}
-                            <div className="w-full bg-white/5 h-2.5 rounded-full overflow-hidden">
+                            <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
                               <div 
                                 className={`h-full rounded-full transition-all duration-1000 ${
                                   m.level === "High" 
@@ -1560,185 +1802,291 @@ export default function HealthOnboarding() {
                       })}
                     </div>
                   </div>
-
-                  <div className="mt-5 p-3.5 bg-white/[0.01] border border-white/5 rounded-2xl flex items-center justify-between text-xs text-zinc-300 gap-3 text-left">
-                    <Info className="h-5 w-5 text-violet-400 shrink-0" />
-                    <span>These levels evaluate active clinical markers, personal EHR inputs, and genetic family history. Verify with diagnostic laboratory checkups.</span>
+                </div>
+ 
+                {/* Recommended Remedies & All Diet Plans */}
+                <div className="p-6 border border-white/10 bg-slate-950/80 rounded-3xl relative overflow-hidden text-left shadow-lg space-y-5">
+                  <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-transparent" />
+                  
+                  <h4 className="text-xs uppercase font-mono tracking-widest font-extrabold text-emerald-300 block flex items-center gap-2 border-b border-white/5 pb-2">
+                    <Sliders className="h-4 w-4 text-emerald-400" />
+                    Adaptive Remedies & Diet Plans
+                  </h4>
+ 
+                  {/* Diet plan card */}
+                  {dietPlan && (
+                    <div className="p-4 bg-white/[0.01] border border-white/5 rounded-2xl space-y-3">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span className="text-xs font-bold text-white font-sans">{dietPlan.title}</span>
+                        <span className="text-[9px] font-mono font-bold bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded uppercase">
+                          {dietPlan.dailyCalorieTarget}
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-2 text-[11px] leading-relaxed">
+                        <div>
+                          <span className="text-[9px] font-mono text-zinc-500 font-extrabold uppercase block">🌅 Breakfast:</span>
+                          <span className="text-zinc-300">{dietPlan.breakfast}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] font-mono text-zinc-500 font-extrabold uppercase block">☀️ Lunch:</span>
+                          <span className="text-zinc-300">{dietPlan.lunch}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] font-mono text-zinc-500 font-extrabold uppercase block">🌙 Dinner:</span>
+                          <span className="text-zinc-300">{dietPlan.dinner}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] font-mono text-zinc-500 font-extrabold uppercase block">🍏 Snacks:</span>
+                          <span className="text-zinc-300">{dietPlan.snacks}</span>
+                        </div>
+                        <div className="pt-1 border-t border-white/5">
+                          <span className="text-[9px] font-mono text-rose-400 font-extrabold uppercase block">🚫 Avoid Completely:</span>
+                          <span className="text-rose-300/80">{dietPlan.avoid}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+ 
+                  {/* Recommended remedies */}
+                  <div className="space-y-2">
+                    <span className="text-[9px] text-zinc-400 font-mono font-bold uppercase tracking-wider block">
+                      🧬 Diagnostic Recommended Remedies:
+                    </span>
+                    <div className="space-y-2">
+                      {recommendedRemedies.map((rem, idx) => (
+                        <div key={idx} className="p-2.5 bg-black/40 border border-white/5 rounded-xl flex items-start gap-2.5">
+                          <Check className="h-3.5 w-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                          <span className="text-[11px] text-zinc-300 font-sans leading-normal">{rem}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-
-                {/* Direct Home Test Booking or External Labs Platform links (Only if health index is below 70) */}
-                {healthScore < 70 && (
-                  <div className="p-6 border border-white/10 bg-slate-950/80 rounded-3xl relative overflow-hidden text-left shadow-lg space-y-5 mt-6">
-                    <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-transparent" />
-                    
-                    <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                      <AlertTriangle className="h-5 w-5 text-amber-400 animate-pulse" />
+ 
+              </div>
+              
+              {/* Column 3: Live GPS Labs Finder & AI Suggestions */}
+              <div className="space-y-6">
+                
+                {/* Live GPS Pathology Laboratory Booking Platform */}
+                <div className="p-6 border border-white/10 bg-slate-950/80 rounded-3xl relative overflow-hidden text-left shadow-lg space-y-4">
+                  <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-transparent" />
+                  
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Compass className="h-4.5 w-4.5 text-amber-400 animate-pulse" />
                       <div>
-                        <h4 className="text-sm uppercase font-mono tracking-wider font-bold text-amber-300">
-                          Critical Lab Diagnostics Required
+                        <h4 className="text-xs uppercase font-mono tracking-wider font-extrabold text-amber-300">
+                          Live GPS Labs Finder
                         </h4>
-                        <p className="text-[10px] text-zinc-500 font-mono">
-                          Health score below 70 baseline. Requesting phlebotomy diagnostics.
+                        <p className="text-[8px] text-zinc-500 font-mono">
+                          Secure slots on verified laboratory networks
                         </p>
                       </div>
                     </div>
-
-                    {/* Choice 1: Visit Website buttons */}
-                    <div className="space-y-2">
-                      <span className="text-[10px] text-zinc-400 font-mono font-bold uppercase tracking-wider block">
-                        Option A: Book on Partner Portals
-                      </span>
-                      <div className="grid grid-cols-3 gap-2">
-                        {[
-                          { name: "Healthians", url: "https://www.healthians.com" },
-                          { name: "Clinico", url: "https://www.clinico.in" },
-                          { name: "Metropolis", url: "https://www.metropolisindia.com" }
-                        ].map((site) => (
-                          <a
-                            key={site.name}
-                            href={site.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => playBeep(850, 0.05)}
-                            className="p-2.5 rounded-xl bg-white/[0.02] border border-white/10 hover:border-violet-500/40 text-center text-[11px] font-bold text-white hover:bg-white/[0.04] transition-all flex flex-col items-center justify-center gap-1 group"
-                          >
-                            <span className="text-xs group-hover:text-violet-400">{site.name}</span>
-                            <span className="text-[8px] text-zinc-500 font-mono flex items-center gap-0.5">
-                              Visit ↗
-                            </span>
-                          </a>
-                        ))}
-                      </div>
+                    <div className="flex items-center gap-1 text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+                      GPS ON
                     </div>
-
-                    {/* Choice 2: Direct booking simulation form */}
-                    <div className="space-y-3 pt-2 border-t border-white/5">
-                      <span className="text-[10px] text-zinc-400 font-mono font-bold uppercase tracking-wider block">
-                        Option B: Book Home Sample Collection Slot
+                  </div>
+ 
+                  {/* Address search box */}
+                  <div className="space-y-2">
+                    <div className="flex gap-1.5">
+                      <input
+                        type="text"
+                        placeholder="Search another city/location..."
+                        value={labSearchText}
+                        onChange={(e) => setLabSearchText(e.target.value)}
+                        className="flex-1 bg-black/40 border border-white/10 text-[11px] text-white rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-violet-500 font-sans"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => geocodeAndSearchLabs(labSearchText)}
+                        className="px-3 bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-mono font-bold rounded-xl flex items-center gap-1 cursor-pointer transition-all shrink-0"
+                      >
+                        <Search className="h-3 w-3" />
+                        FIND
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-mono">
+                      <MapPin className="h-3 w-3 text-rose-400 shrink-0" />
+                      <span className="truncate">{labSearchAddr}</span>
+                    </div>
+                  </div>
+ 
+                  {/* Laboratory Search Results list */}
+                  {!labBookingCompleted ? (
+                    <div className="space-y-3 pt-2">
+                      <span className="text-[9px] text-zinc-500 font-mono font-extrabold uppercase tracking-wider block">
+                        Select Diagnostic Laboratory:
                       </span>
-
-                      {!bookingCompleted ? (
-                        <form onSubmit={handleBookHomeTest} className="space-y-3">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="text-[9px] text-zinc-500 font-mono uppercase block mb-1">Select Laboratory</label>
-                              <select
-                                value={bookingProvider}
-                                onChange={(e) => setBookingProvider(e.target.value)}
-                                className="w-full bg-black/40 border border-white/10 text-xs text-white rounded-xl px-2.5 py-2 focus:outline-none focus:border-violet-500 font-sans"
+ 
+                      {labsLoading ? (
+                        <div className="py-8 text-center space-y-2">
+                          <Loader2 className="h-6 w-6 text-violet-400 animate-spin mx-auto" />
+                          <span className="text-[10px] font-mono text-zinc-500 uppercase block animate-pulse">Querying local lab nodes via satellite...</span>
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+                          {discoveredLabs.map((lab, index) => {
+                            const isSelected = selectedLab && selectedLab.title === lab.title;
+                            return (
+                              <button
+                                key={index}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedLab(lab);
+                                  playBeep(850, 0.05);
+                                }}
+                                className={`w-full p-2 text-left rounded-xl border text-xs transition-all flex flex-col gap-0.5 cursor-pointer ${
+                                  isSelected 
+                                    ? "bg-violet-600/10 border-violet-500/50 hover:bg-violet-600/15" 
+                                    : "bg-white/[0.01] border-white/5 hover:border-white/15 hover:bg-white/[0.02]"
+                                }`}
                               >
-                                <option value="Healthians" className="bg-slate-950 text-white">Healthians Labs</option>
-                                <option value="Clinico" className="bg-slate-950 text-white">Clinico Pathology</option>
-                                <option value="Metropolis" className="bg-slate-950 text-white">Metropolis Diagnostic</option>
-                              </select>
-                            </div>
-
-                            <div>
-                              <label className="text-[9px] text-zinc-500 font-mono uppercase block mb-1">Select Package</label>
-                              <select
-                                value={bookingPackage}
-                                onChange={(e) => setBookingPackage(e.target.value)}
-                                className="w-full bg-black/40 border border-white/10 text-xs text-white rounded-xl px-2.5 py-2 focus:outline-none focus:border-violet-500 font-sans"
-                              >
-                                <option value="Comprehensive Health & Wellness Panel" className="bg-slate-950 text-white">Comprehensive Profile</option>
-                                <option value="HbA1c & Blood Sugar Check" className="bg-slate-950 text-white">HbA1c & Sugar</option>
-                                <option value="Lipid & Coronary Risk Scan" className="bg-slate-950 text-white">Lipid Profile</option>
-                              </select>
+                                <span className={`font-bold block ${isSelected ? "text-violet-300" : "text-white"}`}>
+                                  {lab.title}
+                                </span>
+                                <span className="text-[10px] text-zinc-400 block truncate leading-none">
+                                  {lab.address}
+                                </span>
+                                <span className="text-[9px] text-zinc-500 font-mono flex items-center gap-0.5 mt-0.5">
+                                  <MapPin className="h-2.5 w-2.5 text-emerald-400" />
+                                  ~{lab.distance ? parseFloat(lab.distance).toFixed(2) : "1.20"} km away
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+ 
+                      {/* Selection Form */}
+                      {selectedLab && (
+                        <form onSubmit={handleBookLabTest} className="space-y-3 pt-2 border-t border-white/5">
+                          {/* Test selector tabs */}
+                          <div>
+                            <span className="text-[9px] text-zinc-500 font-mono font-extrabold uppercase block mb-1.5">Select Lab Checkup Test:</span>
+                            <div className="grid grid-cols-3 gap-1">
+                              {[
+                                { name: "Blood Test", value: "Blood Test" },
+                                { name: "Sugar Test", value: "Blood Sugar Test" },
+                                { name: "Urine Test", value: "Urine Analysis" }
+                              ].map((test) => (
+                                <button
+                                  key={test.value}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedTest(test.value as any);
+                                    playBeep(900, 0.05);
+                                  }}
+                                  className={`py-1.5 text-[10px] font-mono font-bold rounded-lg border transition-all cursor-pointer ${
+                                    selectedTest === test.value 
+                                      ? "bg-amber-500/10 border-amber-500/50 text-amber-400" 
+                                      : "bg-black/30 border-white/5 text-zinc-400 hover:text-white"
+                                  }`}
+                                >
+                                  {test.name}
+                                </button>
+                              ))}
                             </div>
                           </div>
-
+ 
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="text-[9px] text-zinc-500 font-mono uppercase block mb-1">Preferred Slot (Date & Time)</label>
+                              <label className="text-[9px] text-zinc-500 font-mono uppercase block mb-1">Appointment Slot</label>
                               <input
                                 type="datetime-local"
-                                value={bookingSlot}
+                                value={labBookingSlot}
                                 required
-                                onChange={(e) => setBookingSlot(e.target.value)}
-                                className="w-full bg-black/40 border border-white/10 text-xs text-white rounded-xl px-2.5 py-2 focus:outline-none focus:border-violet-500 font-sans"
+                                onChange={(e) => setLabBookingSlot(e.target.value)}
+                                className="w-full bg-black/40 border border-white/10 text-[11px] text-white rounded-xl px-2.5 py-2 focus:outline-none focus:border-violet-500 font-sans"
                               />
                             </div>
-
+ 
                             <div>
-                              <label className="text-[9px] text-zinc-500 font-mono uppercase block mb-1">Patient Phone Contact</label>
+                              <label className="text-[9px] text-zinc-500 font-mono uppercase block mb-1">Contact Phone</label>
                               <input
                                 type="tel"
                                 placeholder="+91 98765 43210"
-                                value={bookingPhone}
+                                value={labBookingPhone}
                                 required
-                                onChange={(e) => setBookingPhone(e.target.value)}
-                                className="w-full bg-black/40 border border-white/10 text-xs text-white rounded-xl px-2.5 py-2 focus:outline-none focus:border-violet-500 font-sans"
+                                onChange={(e) => setLabBookingPhone(e.target.value)}
+                                className="w-full bg-black/40 border border-white/10 text-[11px] text-white rounded-xl px-2.5 py-2 focus:outline-none focus:border-violet-500 font-sans"
                               />
                             </div>
                           </div>
-
-                          <div>
-                            <label className="text-[9px] text-zinc-500 font-mono uppercase block mb-1">Home Collection Physical Address</label>
-                            <input
-                              type="text"
-                              placeholder="Enter home or office address for blood draw..."
-                              value={bookingAddress}
-                              required
-                              onChange={(e) => setBookingAddress(e.target.value)}
-                              className="w-full bg-black/40 border border-white/10 text-xs text-white rounded-xl px-2.5 py-2 focus:outline-none focus:border-violet-500 font-sans"
-                            />
-                          </div>
-
+ 
                           <button
                             type="submit"
                             disabled={isBookingSubmitting}
-                            className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-xs font-bold font-mono transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            className="w-full py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-[11px] font-bold font-mono transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                           >
                             {isBookingSubmitting ? (
                               <>
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                Reserving Slot on {bookingProvider} network...
+                                Registering reservation...
                               </>
                             ) : (
                               <>
-                                📅 Secure Home Collection Slot
+                                📅 Secure Appointment Reservation
                               </>
                             )}
                           </button>
                         </form>
-                      ) : (
-                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl text-center space-y-2">
-                          <CheckCircle className="h-8 w-8 text-emerald-400 mx-auto animate-bounce" />
-                          <h5 className="text-xs font-bold text-white uppercase tracking-wider">
-                            Home Sample Collection Confirmed!
-                          </h5>
-                          <p className="text-[10px] text-zinc-300 leading-normal max-w-xs mx-auto">
-                            A certified phlebotomist from <b>{bookingProvider}</b> has been booked to collect your blood sample at your address on <b>{new Date(bookingSlot).toLocaleString()}</b>.
-                          </p>
-                          <div className="text-[9px] font-mono bg-black/30 border border-white/5 py-1.5 px-3 rounded-lg inline-block text-zinc-400">
-                            Booking ID: <span className="text-emerald-400 font-bold">{bookingSuccessId}</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setBookingCompleted(false);
-                              setBookingSlot("");
-                              setBookingPhone("");
-                              setBookingAddress("");
-                              playBeep(700, 0.05);
-                            }}
-                            className="text-[9px] font-mono hover:underline text-zinc-400 hover:text-white block mx-auto pt-1"
-                          >
-                            Book Another Test
-                          </button>
-                        </div>
                       )}
                     </div>
-                  </div>
-                )}
-
-              </div>
-              
-              {/* Right Column: AI extraction details & Suggestions checkboxes */}
-              <div className="lg:col-span-7 space-y-6">
-                
-                {/* Lab report OCR information if available */}
+                  ) : (
+                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl text-center space-y-2.5">
+                      <CheckCircle className="h-7 w-7 text-emerald-400 mx-auto animate-bounce" />
+                      <h5 className="text-[11px] font-bold text-white uppercase tracking-wider font-mono">
+                        Appointment Confirmed!
+                      </h5>
+                      
+                      <div className="text-[10px] text-zinc-300 leading-normal text-left bg-black/30 p-3 rounded-xl border border-white/5 space-y-1.5 font-sans">
+                        <div>
+                          <span className="text-[8px] font-mono text-zinc-500 font-bold uppercase block">Diagnostic Center:</span>
+                          <span className="text-white font-bold block truncate">{selectedLab?.title}</span>
+                          <span className="text-[9px] text-zinc-400 block truncate leading-none mt-0.5">{selectedLab?.address}</span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] font-mono text-zinc-500 font-bold uppercase block">Registered Service:</span>
+                          <span className="text-amber-400 font-bold">{selectedTest} Checkup</span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] font-mono text-zinc-500 font-bold uppercase block">Scheduled Interval:</span>
+                          <span className="text-zinc-200">{new Date(labBookingSlot).toLocaleString()}</span>
+                        </div>
+                      </div>
+ 
+                      <div className="text-[9px] font-mono bg-black/50 border border-white/5 py-1 px-3 rounded-lg inline-block text-zinc-400 w-full">
+                        E-Booking ID: <span className="text-emerald-400 font-bold">{labBookingSuccessId}</span>
+                      </div>
+ 
+                      <div className="p-2.5 bg-rose-500/5 border border-rose-500/10 rounded-xl text-left text-[9px] text-zinc-400 font-mono space-y-1">
+                        <span className="text-rose-400 font-bold uppercase block">📋 Patient Guidelines:</span>
+                        <span>• Fasting: 10-12 hours required before blood draw. Water is permitted.</span>
+                        <span>• Identification: Bring booking receipt ID on transit check-in.</span>
+                      </div>
+ 
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLabBookingCompleted(false);
+                          setLabBookingSlot("");
+                          setLabBookingPhone("");
+                          playBeep(700, 0.05);
+                        }}
+                        className="text-[9px] font-mono hover:underline text-zinc-400 hover:text-white block mx-auto pt-1"
+                      >
+                        Find/Book Another Test
+                      </button>
+                    </div>
+                  )}
+                </div>
+ 
+                {/* Lab report OCR telemetry values if available */}
                 {extractedValues && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -1748,39 +2096,39 @@ export default function HealthOnboarding() {
                     <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-sky-400/30 to-transparent" />
                     
                     <div className="flex items-center gap-2 mb-4 border-b border-sky-950/40 pb-2">
-                       <Sparkles className="h-5 w-5 text-sky-400 animate-pulse" />
-                      <h4 className="text-sm uppercase font-mono tracking-wider font-bold text-sky-300 block">
+                      <Sparkles className="h-5 w-5 text-sky-400 animate-pulse" />
+                      <h4 className="text-xs uppercase font-mono tracking-wider font-bold text-sky-300 block">
                         Labs Extraction telemetry values
                       </h4>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                      <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
-                        <span className="text-xs font-mono text-zinc-400 uppercase font-bold block">Parsed Plasma Glycemia</span>
-                        <span className="text-sm font-semibold block mt-1.5 text-zinc-200">{extractedValues.bloodSugar}</span>
+ 
+                    <div className="grid grid-cols-2 gap-3.5 text-[11px]">
+                      <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl">
+                        <span className="text-[9px] font-mono text-zinc-400 uppercase font-bold block leading-none">Plasma Glycemia</span>
+                        <span className="text-xs font-semibold block mt-1 text-zinc-200">{extractedValues.bloodSugar}</span>
                       </div>
                       
-                      <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
-                        <span className="text-xs font-mono text-zinc-400 uppercase font-bold block">Circulating Cholesterol</span>
-                        <span className="text-sm font-semibold block mt-1.5 text-zinc-200">{extractedValues.cholesterol}</span>
+                      <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl">
+                        <span className="text-[9px] font-mono text-zinc-400 uppercase font-bold block leading-none">Cholesterol</span>
+                        <span className="text-xs font-semibold block mt-1 text-zinc-200">{extractedValues.cholesterol}</span>
                       </div>
-
-                      <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
-                        <span className="text-xs font-mono text-zinc-400 uppercase font-bold block">Absolute Hemoglobin</span>
-                        <span className="text-sm font-semibold block mt-1.5 text-zinc-200">{extractedValues.hemoglobin}</span>
+ 
+                      <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl">
+                        <span className="text-[9px] font-mono text-zinc-400 uppercase font-bold block leading-none">Absolute Hb</span>
+                        <span className="text-xs font-semibold block mt-1 text-zinc-200">{extractedValues.hemoglobin}</span>
                       </div>
-
-                      <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
-                        <span className="text-xs font-mono text-zinc-400 uppercase font-bold block">Thyrotropin Thyroid Panel</span>
-                        <span className="text-sm font-semibold block mt-1.5 text-zinc-200">{extractedValues.thyroid}</span>
+ 
+                      <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl">
+                        <span className="text-[9px] font-mono text-zinc-400 uppercase font-bold block leading-none">Thyroid Panel</span>
+                        <span className="text-xs font-semibold block mt-1 text-zinc-200">{extractedValues.thyroid}</span>
                       </div>
                     </div>
-
+ 
                     {/* Anomalous findings markers block */}
                     {extractedValues.abnormalParameters.length > 0 && (
-                      <div className="mt-5 p-4 bg-rose-950/20 border border-rose-500/20 text-rose-300 rounded-2xl text-xs sm:text-sm space-y-2 text-left shadow-lg">
-                        <span className="text-xs font-mono uppercase tracking-wide block font-extrabold text-rose-400">🚨 Primary Biomarker Anomalies Detected:</span>
-                        <ul className="list-disc pl-5 text-zinc-300 space-y-1 mt-1">
+                      <div className="mt-4 p-3 bg-rose-950/20 border border-rose-500/20 text-rose-300 rounded-2xl text-[11px] space-y-1.5 text-left shadow-lg">
+                        <span className="text-[10px] font-mono uppercase tracking-wide block font-extrabold text-rose-400">🚨 Primary Biomarker Anomalies Detected:</span>
+                        <ul className="list-disc pl-4 text-zinc-300 space-y-0.5">
                           {extractedValues.abnormalParameters.map((a, idx) => (
                             <li key={idx}><strong>{a}</strong></li>
                           ))}
@@ -1789,44 +2137,52 @@ export default function HealthOnboarding() {
                     )}
                   </motion.div>
                 )}
-
+ 
                 {/* AI Suggestions checkbox checklist */}
                 <div className="p-6 border border-white/10 bg-slate-950/80 rounded-3xl relative overflow-hidden text-left shadow-lg">
                   <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-violet-500/20 via-fuchsia-500/20 to-transparent" />
                   
                   <div className="flex items-center gap-2 mb-4 border-b border-white/5 pb-2">
                     <Sparkles className="h-5 w-5 text-violet-400 animate-pulse" />
-                    <h4 className="text-sm uppercase font-mono tracking-wider font-bold text-violet-300 block">
+                    <h4 className="text-xs uppercase font-mono tracking-wider font-bold text-violet-300 block">
                       Targeted Adaptive AI Clinic Suggestions
                     </h4>
                   </div>
-
-                  <div className="space-y-3">
+ 
+                  <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
                     {aiSuggestions.map((sug, idx) => {
+                      const isCompleted = completedSuggestions.includes(idx);
                       return (
-                        <div key={idx} className="flex items-start gap-3 p-3.5 bg-black/30 border border-white/5 rounded-xl">
-                          <CheckCircle className="h-5 w-5 text-emerald-400 shrink-0 mt-0.5" />
-                          <span className="text-sm text-zinc-200 block leading-relaxed">{sug}</span>
-                        </div>
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => toggleSuggestion(idx)}
+                          className={`w-full flex items-start gap-3 p-3 bg-black/30 border text-left rounded-xl hover:bg-black/40 hover:border-white/10 transition-all cursor-pointer ${
+                            isCompleted ? "border-emerald-500/30 opacity-70" : "border-white/5"
+                          }`}
+                        >
+                          <CheckCircle className={`h-4.5 w-4.5 shrink-0 mt-0.5 ${isCompleted ? "text-emerald-400" : "text-zinc-600"}`} />
+                          <span className={`text-xs block leading-relaxed ${isCompleted ? "text-zinc-500 line-through" : "text-zinc-200"}`}>{sug}</span>
+                        </button>
                       );
                     })}
                   </div>
-
+ 
                   {/* HIPAA compliance disclaimer note footer */}
-                  <div className="mt-6 pt-5 border-t border-white/5 flex gap-3 text-xs font-sans text-zinc-400 leading-relaxed">
-                    <ShieldCheck className="h-5 w-5 text-emerald-400/80 shrink-0" />
-                    <span><b>HIPAA Encrypted Patient Record Notification:</b> All diagnostic outcomes, biometric indicators, and custom reports are retained inside client-side isolated sandbox arrays. No corporate vendor synchronization will occur without explicit OAuth validation.</span>
+                  <div className="mt-5 pt-4 border-t border-white/5 flex gap-2.5 text-[10px] font-sans text-zinc-400 leading-relaxed">
+                    <ShieldCheck className="h-4.5 w-4.5 text-emerald-400/80 shrink-0" />
+                    <span><b>HIPAA Patient Record:</b> All diagnostic outcomes, biometric indicators, and custom reports are retained inside client-side isolated sandbox arrays.</span>
                   </div>
                 </div>
-
+ 
               </div>
-
+ 
             </div>
-
+ 
           </motion.div>
         )}
       </AnimatePresence>
-
+ 
     </div>
   );
 }
