@@ -32,7 +32,10 @@ import {
   Calendar,
   Search,
   Compass,
-  Navigation
+  Navigation,
+  X,
+  BookOpen,
+  Apple
 } from "lucide-react";
 
 interface OnboardingData {
@@ -171,6 +174,8 @@ export default function HealthOnboarding() {
   } | null>(null);
   
   const [recommendedRemedies, setRecommendedRemedies] = useState<string[]>([]);
+  const [isVitalModalOpen, setIsVitalModalOpen] = useState(false);
+  const [activeRemedyDietTab, setActiveRemedyDietTab] = useState<"diagnostic" | "diet">("diagnostic");
 
   const searchNearbyLabs = async (latVal: number, lngVal: number, customSearchName = "") => {
     setLabsLoading(true);
@@ -1678,52 +1683,34 @@ export default function HealthOnboarding() {
                   </div>
                 </div>
  
-                {/* Digital Patient Ledger Sheet (Patient Vital Record) */}
-                <div className="p-6 border border-white/10 bg-slate-950/80 rounded-3xl relative overflow-hidden text-left shadow-lg">
+                {/* Patient Vital Record Button Trigger */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsVitalModalOpen(true);
+                    playBeep(1100, 0.1);
+                  }}
+                  className="w-full p-5 border border-white/10 bg-slate-950/80 hover:bg-slate-900/95 rounded-3xl relative overflow-hidden text-left shadow-lg transition-all group hover:border-sky-500/50 flex items-center justify-between cursor-pointer active:scale-98"
+                >
                   <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-sky-500/20 via-violet-500/20 to-transparent" />
-                  
-                  <h4 className="text-xs uppercase font-mono tracking-widest font-extrabold text-sky-400 block mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
-                    <User className="h-4 w-4 text-sky-400" />
-                    Patient Vital Record
-                  </h4>
- 
-                  <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-                    <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl col-span-2">
-                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-0.5">Full Patient Name</span>
-                      <span className="text-xs font-bold text-white block truncate">{formData.fullName || "Unregistered Patient"}</span>
+                  <div className="flex items-center gap-3.5">
+                    <div className="p-3 rounded-2xl bg-sky-500/10 text-sky-400 group-hover:scale-110 transition-transform">
+                      <User className="h-5 w-5" />
                     </div>
-                    <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl">
-                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-0.5">Age & Gender</span>
-                      <span className="text-xs font-bold text-white block">{formData.age} Yrs • {formData.gender}</span>
-                    </div>
-                    <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl">
-                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-0.5">Body Mass Index</span>
-                      <span className="text-xs font-bold text-white block">
-                        {bmi} <span className="text-[8px] text-zinc-400 font-normal">({bmiCategory})</span>
-                      </span>
-                    </div>
-                    <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl">
-                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-0.5">Basal Metabolism</span>
-                      <span className="text-xs font-bold text-violet-300 block">{dynamicBmr} Kcal</span>
-                    </div>
-                    <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl">
-                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-0.5">Dietary Profile</span>
-                      <span className="text-xs font-bold text-emerald-400 block">{formData.dietType}</span>
-                    </div>
-                    <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl">
-                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-0.5">Hydration Target</span>
-                      <span className="text-xs font-bold text-sky-400 block">{dynamicFluid} L / Day</span>
-                    </div>
-                    <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl">
-                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-0.5">Daily Sleep Cycle</span>
-                      <span className="text-xs font-bold text-zinc-300 block">{formData.sleep}</span>
-                    </div>
-                    <div className="p-2.5 bg-black/40 border border-white/5 rounded-xl col-span-2">
-                      <span className="text-[9px] text-zinc-500 font-extrabold uppercase block mb-0.5">Physiological Stress Baseline</span>
-                      <span className="text-xs font-bold text-rose-400 block">{formData.stressLevel} Severity Strain</span>
+                    <div>
+                      <h4 className="text-xs uppercase font-mono tracking-widest font-extrabold text-sky-400">
+                        Patient Vital Record
+                      </h4>
+                      <p className="text-[10px] text-zinc-400 font-mono mt-0.5">
+                        Click to view clinical vital ledger
+                      </p>
                     </div>
                   </div>
-                </div>
+                  <div className="flex items-center gap-1 bg-sky-500/10 border border-sky-500/20 px-2.5 py-1 rounded-xl text-sky-300 font-mono text-[9px] uppercase font-bold group-hover:bg-sky-500/20 transition-all shrink-0">
+                    Open Table
+                    <ChevronRight className="h-3 w-3" />
+                  </div>
+                </button>
  
               </div>
               
@@ -1808,60 +1795,153 @@ export default function HealthOnboarding() {
                 <div className="p-6 border border-white/10 bg-slate-950/80 rounded-3xl relative overflow-hidden text-left shadow-lg space-y-5">
                   <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-emerald-500/20 via-teal-500/20 to-transparent" />
                   
-                  <h4 className="text-xs uppercase font-mono tracking-widest font-extrabold text-emerald-300 block flex items-center gap-2 border-b border-white/5 pb-2">
-                    <Sliders className="h-4 w-4 text-emerald-400" />
-                    Adaptive Remedies & Diet Plans
-                  </h4>
- 
-                  {/* Diet plan card */}
-                  {dietPlan && (
-                    <div className="p-4 bg-white/[0.01] border border-white/5 rounded-2xl space-y-3">
-                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                        <span className="text-xs font-bold text-white font-sans">{dietPlan.title}</span>
-                        <span className="text-[9px] font-mono font-bold bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded uppercase">
-                          {dietPlan.dailyCalorieTarget}
-                        </span>
-                      </div>
-                      
-                      <div className="space-y-2 text-[11px] leading-relaxed">
-                        <div>
-                          <span className="text-[9px] font-mono text-zinc-500 font-extrabold uppercase block">🌅 Breakfast:</span>
-                          <span className="text-zinc-300">{dietPlan.breakfast}</span>
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                    <h4 className="text-xs uppercase font-mono tracking-widest font-extrabold text-emerald-300 flex items-center gap-2">
+                      <Sliders className="h-4 w-4 text-emerald-400" />
+                      Adaptive Remedies & Diet Plans
+                    </h4>
+                  </div>
+
+                  {/* Tab Button Menu Option */}
+                  <div className="flex gap-1.5 p-1 bg-black/40 border border-white/5 rounded-2xl">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveRemedyDietTab("diagnostic");
+                        playBeep(900, 0.05);
+                      }}
+                      className={`flex-1 py-2 text-xs font-mono font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                        activeRemedyDietTab === "diagnostic"
+                          ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-300"
+                          : "text-zinc-500 hover:text-white"
+                      }`}
+                    >
+                      <BookOpen className="h-3.5 w-3.5" />
+                      🧬 Diagnostics
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveRemedyDietTab("diet");
+                        playBeep(900, 0.05);
+                      }}
+                      className={`flex-1 py-2 text-xs font-mono font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                        activeRemedyDietTab === "diet"
+                          ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-300"
+                          : "text-zinc-500 hover:text-white"
+                      }`}
+                    >
+                      <Apple className="h-3.5 w-3.5 text-emerald-400" />
+                      🍏 Low-Glycemic Diet
+                    </button>
+                  </div>
+
+                  {activeRemedyDietTab === "diagnostic" ? (
+                    /* Remedies Horizontal Table */
+                    <div className="overflow-x-auto border border-white/5 rounded-2xl bg-black/30">
+                      <table className="w-full border-collapse text-left text-xs font-mono">
+                        <thead>
+                          <tr className="border-b border-white/10 text-zinc-400 uppercase text-[9px] tracking-wider bg-white/[0.01]">
+                            <th className="py-3 px-3.5 w-12 text-center font-bold">No.</th>
+                            <th className="py-3 px-3.5 font-bold">Clinical Remedy & Action Recommendation</th>
+                            <th className="py-3 px-3.5 w-28 text-center font-bold">Priority</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                          {recommendedRemedies.length > 0 ? (
+                            recommendedRemedies.map((rem, idx) => (
+                              <tr key={idx} className="hover:bg-white/[0.01] transition-colors">
+                                <td className="py-3 px-3.5 text-center text-emerald-400 font-bold">{idx + 1}</td>
+                                <td className="py-3 px-3.5 text-zinc-300 font-sans leading-relaxed">{rem}</td>
+                                <td className="py-3 px-3.5 text-center">
+                                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 font-bold uppercase tracking-wider">
+                                    High Priority
+                                  </span>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={3} className="py-8 text-center text-zinc-500 font-sans">
+                                No diagnostic recommendations to display.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    /* Low Glycemic Index Metabolic Meal Plan Horizontal Table */
+                    <div className="space-y-3">
+                      {dietPlan && (
+                        <div className="flex justify-between items-center bg-emerald-500/5 border border-emerald-500/10 p-3 rounded-2xl">
+                          <span className="text-xs font-bold text-emerald-300 font-sans">{dietPlan.title}</span>
+                          <span className="text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-400 px-2 py-1 rounded uppercase tracking-wider">
+                            ⚡ {dietPlan.dailyCalorieTarget}
+                          </span>
                         </div>
-                        <div>
-                          <span className="text-[9px] font-mono text-zinc-500 font-extrabold uppercase block">☀️ Lunch:</span>
-                          <span className="text-zinc-300">{dietPlan.lunch}</span>
-                        </div>
-                        <div>
-                          <span className="text-[9px] font-mono text-zinc-500 font-extrabold uppercase block">🌙 Dinner:</span>
-                          <span className="text-zinc-300">{dietPlan.dinner}</span>
-                        </div>
-                        <div>
-                          <span className="text-[9px] font-mono text-zinc-500 font-extrabold uppercase block">🍏 Snacks:</span>
-                          <span className="text-zinc-300">{dietPlan.snacks}</span>
-                        </div>
-                        <div className="pt-1 border-t border-white/5">
-                          <span className="text-[9px] font-mono text-rose-400 font-extrabold uppercase block">🚫 Avoid Completely:</span>
-                          <span className="text-rose-300/80">{dietPlan.avoid}</span>
-                        </div>
+                      )}
+
+                      <div className="overflow-x-auto border border-white/5 rounded-2xl bg-black/30">
+                        <table className="w-full border-collapse text-left text-xs font-mono">
+                          <thead>
+                            <tr className="border-b border-white/10 text-zinc-400 uppercase text-[9px] tracking-wider bg-white/[0.01]">
+                              <th className="py-3 px-3.5 w-32 font-bold">Meal Period</th>
+                              <th className="py-3 px-3.5 font-bold">Low Glycemic Metabolic Plan</th>
+                              <th className="py-3 px-3.5 w-44 font-bold">Metabolic Objective</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-white/5">
+                            {dietPlan ? (
+                              <>
+                                <tr className="hover:bg-white/[0.01] transition-colors">
+                                  <td className="py-3 px-3.5 font-bold text-emerald-300 flex items-center gap-1.5">
+                                    🌅 Breakfast
+                                  </td>
+                                  <td className="py-3 px-3.5 text-zinc-300 font-sans leading-relaxed">{dietPlan.breakfast}</td>
+                                  <td className="py-3 px-3.5 text-emerald-400/80 font-sans">Insulin Stabilizing Launch</td>
+                                </tr>
+                                <tr className="hover:bg-white/[0.01] transition-colors">
+                                  <td className="py-3 px-3.5 font-bold text-emerald-300">
+                                    ☀️ Lunch
+                                  </td>
+                                  <td className="py-3 px-3.5 text-zinc-300 font-sans leading-relaxed">{dietPlan.lunch}</td>
+                                  <td className="py-3 px-3.5 text-emerald-400/80 font-sans">Steady Glucose Maintenance</td>
+                                </tr>
+                                <tr className="hover:bg-white/[0.01] transition-colors">
+                                  <td className="py-3 px-3.5 font-bold text-emerald-300">
+                                    🍏 Snacks
+                                  </td>
+                                  <td className="py-3 px-3.5 text-zinc-300 font-sans leading-relaxed">{dietPlan.snacks}</td>
+                                  <td className="py-3 px-3.5 text-amber-400/80 font-sans">Craving & Fatigue Barrier</td>
+                                </tr>
+                                <tr className="hover:bg-white/[0.01] transition-colors">
+                                  <td className="py-3 px-3.5 font-bold text-emerald-300">
+                                    🌙 Dinner
+                                  </td>
+                                  <td className="py-3 px-3.5 text-zinc-300 font-sans leading-relaxed">{dietPlan.dinner}</td>
+                                  <td className="py-3 px-3.5 text-sky-400/80 font-sans">Restorative Sleep Recovery</td>
+                                </tr>
+                                <tr className="hover:bg-rose-500/[0.01] transition-colors bg-rose-500/[0.02]">
+                                  <td className="py-3 px-3.5 font-bold text-rose-400">
+                                    🚫 Avoid
+                                  </td>
+                                  <td className="py-3 px-3.5 text-rose-300/95 font-sans leading-relaxed font-semibold">{dietPlan.avoid}</td>
+                                  <td className="py-3 px-3.5 text-rose-400/80 font-mono font-bold uppercase text-[9px]">High Glycemic Index</td>
+                                </tr>
+                              </>
+                            ) : (
+                              <tr>
+                                <td colSpan={3} className="py-8 text-center text-zinc-500 font-sans">
+                                  No diet plan generated yet.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
                   )}
- 
-                  {/* Recommended remedies */}
-                  <div className="space-y-2">
-                    <span className="text-[9px] text-zinc-400 font-mono font-bold uppercase tracking-wider block">
-                      🧬 Diagnostic Recommended Remedies:
-                    </span>
-                    <div className="space-y-2">
-                      {recommendedRemedies.map((rem, idx) => (
-                        <div key={idx} className="p-2.5 bg-black/40 border border-white/5 rounded-xl flex items-start gap-2.5">
-                          <Check className="h-3.5 w-3.5 text-emerald-400 mt-0.5 shrink-0" />
-                          <span className="text-[11px] text-zinc-300 font-sans leading-normal">{rem}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
                 </div>
  
               </div>
@@ -2182,7 +2262,134 @@ export default function HealthOnboarding() {
           </motion.div>
         )}
       </AnimatePresence>
- 
+
+        {/* Patient Vital Record Table Modal */}
+        <AnimatePresence>
+          {isVitalModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsVitalModalOpen(false)}
+                className="absolute inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
+              />
+
+              {/* Modal Container */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="relative w-full max-w-2xl bg-[#090a16] border border-white/10 rounded-3xl overflow-hidden shadow-2xl z-10 text-left"
+              >
+                {/* Header */}
+                <div className="p-5 border-b border-white/10 bg-white/[0.01] flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-sky-500/10 text-sky-400">
+                      <User className="h-4.5 w-4.5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
+                        Clinical Patient Vital Ledger
+                      </h3>
+                      <p className="text-[10px] text-zinc-400 font-mono mt-0.5">
+                        PulsePoint Somatic Diagnostic Profile
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsVitalModalOpen(false);
+                      playBeep(700, 0.05);
+                    }}
+                    className="p-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl transition-all cursor-pointer"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {/* Body with Horizontal Table style */}
+                <div className="p-6 max-h-[70vh] overflow-y-auto space-y-4">
+                  <div className="overflow-x-auto border border-white/5 rounded-2xl bg-black/30">
+                    <table className="w-full border-collapse text-left text-xs font-mono">
+                      <thead>
+                        <tr className="border-b border-white/10 text-zinc-400 uppercase text-[9px] tracking-wider bg-white/[0.01]">
+                          <th className="py-3 px-4 font-bold">Vital Parameter</th>
+                          <th className="py-3 px-4 text-sky-400 font-bold">Patient Registered Value</th>
+                          <th className="py-3 px-4 text-zinc-400 font-bold">Clinical Status / Reference Range</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        <tr className="hover:bg-white/[0.01] transition-colors">
+                          <td className="py-3 px-4 text-zinc-300 font-sans font-medium">Full Patient Name</td>
+                          <td className="py-3 px-4 text-white font-bold">{formData.fullName || "Unregistered Patient"}</td>
+                          <td className="py-3 px-4 text-zinc-500">Verified Identity Record</td>
+                        </tr>
+                        <tr className="hover:bg-white/[0.01] transition-colors">
+                          <td className="py-3 px-4 text-zinc-300 font-sans font-medium">Age & Gender</td>
+                          <td className="py-3 px-4 text-white font-bold">{formData.age} Yrs • {formData.gender}</td>
+                          <td className="py-3 px-4 text-zinc-500">Demographic Vector</td>
+                        </tr>
+                        <tr className="hover:bg-white/[0.01] transition-colors">
+                          <td className="py-3 px-4 text-zinc-300 font-sans font-medium">Body Mass Index (BMI)</td>
+                          <td className="py-3 px-4 text-emerald-400 font-bold">{bmi}</td>
+                          <td className="py-3 px-4 text-zinc-400 font-sans font-medium">{bmiCategory} <span className="text-[10px] text-zinc-500 font-mono">(Normal range: 18.5 - 24.9)</span></td>
+                        </tr>
+                        <tr className="hover:bg-white/[0.01] transition-colors">
+                          <td className="py-3 px-4 text-zinc-300 font-sans font-medium">Basal Metabolic Rate (BMR)</td>
+                          <td className="py-3 px-4 text-violet-300 font-bold">{dynamicBmr} Kcal</td>
+                          <td className="py-3 px-4 text-zinc-500">Estimated Rest Metabolism Load</td>
+                        </tr>
+                        <tr className="hover:bg-white/[0.01] transition-colors">
+                          <td className="py-3 px-4 text-zinc-300 font-sans font-medium">Dietary Pattern</td>
+                          <td className="py-3 px-4 text-yellow-300 font-bold">{formData.dietType}</td>
+                          <td className="py-3 px-4 text-zinc-500">Configured Nutritional Base</td>
+                        </tr>
+                        <tr className="hover:bg-white/[0.01] transition-colors">
+                          <td className="py-3 px-4 text-zinc-300 font-sans font-medium">Hydration Intake Requirement</td>
+                          <td className="py-3 px-4 text-sky-400 font-bold">{dynamicFluid} Liters / Day</td>
+                          <td className="py-3 px-4 text-zinc-500">Target Fluid Volume</td>
+                        </tr>
+                        <tr className="hover:bg-white/[0.01] transition-colors">
+                          <td className="py-3 px-4 text-zinc-300 font-sans font-medium">Daily Sleep Cycle</td>
+                          <td className="py-3 px-4 text-zinc-300 font-bold">{formData.sleep}</td>
+                          <td className="py-3 px-4 text-zinc-500">Target Circadian Rest Window</td>
+                        </tr>
+                        <tr className="hover:bg-white/[0.01] transition-colors">
+                          <td className="py-3 px-4 text-zinc-300 font-sans font-medium">Stress Baseline</td>
+                          <td className="py-3 px-4 text-rose-400 font-bold">{formData.stressLevel} Severity</td>
+                          <td className="py-3 px-4 text-zinc-500">Daily Psychosomatic Strain Load</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="p-3.5 bg-sky-500/10 border border-sky-500/20 rounded-2xl flex items-start gap-2.5">
+                    <Info className="h-4.5 w-4.5 text-sky-400 mt-0.5 shrink-0" />
+                    <p className="text-[11px] text-sky-300 font-sans leading-relaxed">
+                      This vital ledger is synchronized securely to your PulsePoint local HIPAA records vault. You can update this record at any time by repeating the diagnostic evaluation.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="p-4 border-t border-white/10 bg-white/[0.01] flex justify-end">
+                  <button
+                    onClick={() => {
+                      setIsVitalModalOpen(false);
+                      playBeep(700, 0.05);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-mono text-xs font-bold transition-all cursor-pointer"
+                  >
+                    Close Ledger
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
     </div>
   );
 }

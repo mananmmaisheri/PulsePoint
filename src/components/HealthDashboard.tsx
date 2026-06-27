@@ -889,58 +889,34 @@ export default function HealthDashboard() {
                   </Map>
                 </APIProvider>
               ) : (
-                /* High-tech Sci-Fi Radar Mock Map falling back gracefully */
-                <div className="absolute inset-0 bg-[#070817] flex flex-col items-center justify-center p-4 text-center overflow-hidden">
-                  {/* Radar Circular Sweep Visualization */}
-                  <div className="absolute h-56 w-56 rounded-full border border-emerald-500/10 flex items-center justify-center animate-pulse pointer-events-none">
-                    <div className="h-40 w-40 rounded-full border border-emerald-500/5 flex items-center justify-center">
-                      <div className="h-24 w-24 rounded-full border border-emerald-500/5 flex items-center justify-center">
-                        <div className="h-2 bg-emerald-500/20 rounded-full" />
-                      </div>
-                    </div>
+                /* Fully Interactive API-less OpenStreetMap Embed styled with dark-mode filter */
+                <div className="absolute inset-0 bg-[#070817] w-full h-full relative overflow-hidden">
+                  <iframe
+                    title="PulsePoint Interactive Map"
+                    width="100%"
+                    height="100%"
+                    className="border-0 w-full h-full"
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${currentCoords.lng - 0.012}%2C${currentCoords.lat - 0.008}%2C${currentCoords.lng + 0.012}%2C${currentCoords.lat + 0.008}&layer=mapnik&marker=${currentCoords.lat}%2C${currentCoords.lng}`}
+                    style={{ 
+                      filter: "invert(90%) hue-rotate(180deg) brightness(95%) contrast(90%)",
+                      pointerEvents: "auto"
+                    }}
+                  />
+                  
+                  {/* Floating indicator tag showing location and state */}
+                  <div className="absolute top-3 left-3 bg-black/85 border border-emerald-500/30 px-3 py-1.5 rounded-xl backdrop-blur-md flex items-center gap-2 shadow-2xl z-20">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                    <span className="text-[10px] font-mono text-emerald-400 font-extrabold uppercase tracking-wide">
+                      OSM Live Engine Active ({currentAreaName})
+                    </span>
                   </div>
 
-                  {/* Pulsing geocoded markers on our mock grid */}
-                  {filteredPharmacies.slice(0, 5).map((pharm, i) => {
-                    const offsets = [
-                      { x: '25%', y: '30%' },
-                      { x: '70%', y: '40%' },
-                      { x: '45%', y: '75%' },
-                      { x: '15%', y: '65%' },
-                      { x: '80%', y: '70%' },
-                    ];
-                    const pos = offsets[i % offsets.length];
-                    return (
-                      <div
-                        key={pharm.id}
-                        className="absolute h-4 w-4 bg-emerald-500/20 rounded-full flex items-center justify-center hover:scale-125 transition-all cursor-pointer group"
-                        style={{ left: pos.x, top: pos.y }}
-                        title={pharm.name}
-                      >
-                        <span className="h-2 w-2 bg-emerald-400 rounded-full animate-ping absolute" />
-                        <span className="h-2 w-2 bg-emerald-500 rounded-full border border-white" />
-                        {/* Tooltip on hover */}
-                        <span className="absolute bottom-5 bg-black/90 border border-emerald-500/30 text-[9px] text-emerald-400 font-mono py-1 px-2.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-40 pointer-events-none shadow-xl">
-                          {pharm.name} (~{pharm.distance} km)
-                        </span>
-                      </div>
-                    );
-                  })}
-
-                  {/* Informational overlay offering the Google Maps API Key Setup */}
-                  <div className="z-10 bg-black/85 border border-white/5 p-4 rounded-2xl max-w-sm backdrop-blur-sm space-y-2">
-                    <h4 className="text-xs font-bold text-white flex items-center gap-1.5 justify-center leading-none">
-                      <Compass className="h-4 w-4 text-emerald-400 animate-pulse" />
-                      Grounded OpenStreetMap Radar Active
-                    </h4>
-                    <p className="text-[10px] text-zinc-400 leading-normal max-w-xs mx-auto">
-                      Real geocoded supply logs loaded for **{currentAreaName}**! To unlock standard interactive Google Maps satellite screens, register your API key:
-                    </p>
-                    <div className="text-left bg-white/[0.01] border border-white/5 p-2 rounded-lg space-y-1 font-mono text-[9px] text-zinc-500">
-                      <div className="flex items-center gap-1"><span className="text-emerald-400 font-bold">1.</span> Open <b>Settings</b> (⚙️ top right) ➔ <b>Secrets</b></div>
-                      <div className="flex items-center gap-1"><span className="text-emerald-400 font-bold">2.</span> Name: <code className="text-white font-bold bg-white/5 px-1 rounded">GOOGLE_MAPS_PLATFORM_KEY</code></div>
-                      <div className="flex items-center gap-1"><span className="text-emerald-400 font-bold">3.</span> Paste your Google Maps Key and hit enter.</div>
-                    </div>
+                  {/* Overlaid Pharmacy Marker count HUD */}
+                  <div className="absolute bottom-3 right-3 bg-black/85 border border-white/10 px-3 py-1.5 rounded-xl backdrop-blur-md flex items-center gap-2 shadow-2xl z-20">
+                    <MapPin className="h-3 w-3 text-emerald-400" />
+                    <span className="text-[9px] font-mono text-zinc-300 font-bold">
+                      {filteredPharmacies.length} Chemists Geocoded
+                    </span>
                   </div>
                 </div>
               )}

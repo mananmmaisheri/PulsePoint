@@ -4,7 +4,8 @@ import HealthOnboarding from "./HealthOnboarding";
 import { 
   User, Lock, Mail, ShieldCheck, FileCheck, LogOut, Download, Plus, 
   Trash2, Key, AlertTriangle, Fingerprint, RefreshCcw, CreditCard, 
-  ClipboardList, CheckCircle, ArrowRight, UserPlus, FileText, HeartPulse
+  ClipboardList, CheckCircle, ArrowRight, UserPlus, FileText, HeartPulse,
+  Chrome
 } from "lucide-react";
 import { 
   auth, 
@@ -16,7 +17,9 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signInAnonymously, 
-  signOut 
+  signOut,
+  GoogleAuthProvider,
+  signInWithPopup
 } from "firebase/auth";
 
 interface AppUser {
@@ -310,6 +313,75 @@ export default function UserProfile({ user, onAuthChange, setTab }: UserProfileP
     }
   };
 
+  // Google Sign-In helper using Firebase Popup
+  const handleGoogleSignIn = async () => {
+    playBeep(1000, 0.1);
+    setIsSubmitting(true);
+    setAuthError("");
+
+    try {
+      const provider = new GoogleAuthProvider();
+      const credential = await signInWithPopup(auth, provider);
+      const firebaseUser = credential.user;
+
+      if (firebaseUser) {
+        let profile = await getUserProfile(firebaseUser.uid);
+        if (!profile) {
+          profile = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName || firebaseUser.email?.split("@")[0].charAt(0).toUpperCase() + firebaseUser.email?.split("@")[0].slice(1) || "User",
+            isGuest: false,
+            joinedDate: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+            birthdate: "1994-08-15",
+            bloodType: "A-Positive",
+            allergies: "No declared allergies",
+            conditions: "Healthy Baseline",
+            emergencyContact: "Emergency Dispatch",
+            emergencyPhone: "911"
+          };
+          await saveUserProfile(firebaseUser.uid, profile);
+        }
+
+        const googleUser: AppUser = {
+          uid: firebaseUser.uid,
+          email: profile.email,
+          name: profile.displayName,
+          isGuest: false,
+          joinedDate: profile.joinedDate,
+          birthdate: profile.birthdate,
+          bloodType: profile.bloodType,
+          allergies: profile.allergies,
+          conditions: profile.conditions,
+          emergencyContact: profile.emergencyContact,
+          emergencyPhone: profile.emergencyPhone
+        };
+
+        localStorage.setItem("pulsepoint_user", JSON.stringify(googleUser));
+        onAuthChange(googleUser);
+        setIsSubmitting(false);
+        playBeep(1100, 0.15);
+
+        const completedOnboarding = localStorage.getItem("pulsepoint_onboarding_answers");
+        if (!completedOnboarding) {
+          setShowQuestions(true);
+        }
+      }
+    } catch (error: any) {
+      console.error("Google sign in failed:", error);
+      let errMsg = "Google authentication failed.";
+      if (error.code === "auth/popup-blocked") {
+        errMsg = "Popup blocked! Please allow popups for this site.";
+      } else if (error.code === "auth/popup-closed-by-user") {
+        errMsg = "Sign-in popup closed before completion.";
+      } else {
+        errMsg = error.message || errMsg;
+      }
+      setAuthError(errMsg);
+      setIsSubmitting(false);
+    }
+  };
+
   // Manage profile updates
   const handleProfileSave = async (e: FormEvent) => {
     e.preventDefault();
@@ -559,6 +631,19 @@ export default function UserProfile({ user, onAuthChange, setTab }: UserProfileP
                   </button>
                 </div>
               </form>
+
+              {/* Google Sign-In Option */}
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  disabled={isSubmitting}
+                  className="w-full py-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] text-white border border-white/10 hover:border-white/25 font-bold text-xs tracking-wider uppercase transition-all cursor-pointer active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  <Chrome className="h-4 w-4 text-emerald-400 animate-pulse" />
+                  <span>Sign In with Google</span>
+                </button>
+              </div>
 
               {/* Guest Divider */}
               <div className="relative my-5">

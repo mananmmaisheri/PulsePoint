@@ -1,7 +1,7 @@
 import { useState, startTransition, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth, getUserProfile, UserProfileData } from "./lib/firebase";
+import { auth, getUserProfile, saveUserProfile, UserProfileData } from "./lib/firebase";
 
 // Import modular components
 import BackgroundVideo from "./components/BackgroundVideo";
@@ -66,17 +66,50 @@ export default function App() {
           localStorage.setItem("pulsepoint_user", JSON.stringify(appUser));
           setUser(appUser);
         } else {
-          // If no profile exists yet in firestore, we don't overwrite if we have a provisional one,
-          // but we can default create one or wait for UserProfile to handle registration/save.
-          const localSaved = localStorage.getItem("pulsepoint_user");
-          if (localSaved) {
-            try {
-              const parsed = JSON.parse(localSaved);
-              if (parsed.uid === firebaseUser.uid) {
-                setUser(parsed);
-                return;
-              }
-            } catch (e) {}
+          // Auto-create a profile document for console-created users or Google sign-ins
+          const defaultProfile: UserProfileData = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: firebaseUser.displayName || firebaseUser.email?.split("@")[0].charAt(0).toUpperCase() + firebaseUser.email?.split("@")[0].slice(1) || "User",
+            isGuest: false,
+            joinedDate: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+            birthdate: "1994-08-15",
+            bloodType: "A-Positive",
+            allergies: "No declared allergies",
+            conditions: "Healthy Baseline",
+            emergencyContact: "Emergency Dispatch",
+            emergencyPhone: "911"
+          };
+          try {
+            await saveUserProfile(firebaseUser.uid, defaultProfile);
+            const appUser: AppUser = {
+              uid: firebaseUser.uid,
+              email: defaultProfile.email,
+              name: defaultProfile.displayName,
+              isGuest: defaultProfile.isGuest,
+              birthdate: defaultProfile.birthdate,
+              bloodType: defaultProfile.bloodType,
+              allergies: defaultProfile.allergies,
+              conditions: defaultProfile.conditions,
+              emergencyContact: defaultProfile.emergencyContact,
+              emergencyPhone: defaultProfile.emergencyPhone,
+              joinedDate: defaultProfile.joinedDate,
+            };
+            localStorage.setItem("pulsepoint_user", JSON.stringify(appUser));
+            setUser(appUser);
+          } catch (e) {
+            console.error("Failed to auto-create user profile", e);
+            // Fallback to local profile just in case Firestore rules block it temporarily
+            const localSaved = localStorage.getItem("pulsepoint_user");
+            if (localSaved) {
+              try {
+                const parsed = JSON.parse(localSaved);
+                if (parsed.uid === firebaseUser.uid) {
+                  setUser(parsed);
+                  return;
+                }
+              } catch (err) {}
+            }
           }
         }
       } else {
