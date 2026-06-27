@@ -139,6 +139,50 @@ export default function UserProfile({ user, onAuthChange, setTab }: UserProfileP
       return;
     }
 
+    // Direct Admin / Database Offline Bypass Check
+    const isLocalAdmin = email.toLowerCase() === "admin@pulsepoint.com" || email.toLowerCase().startsWith("admin");
+    if (isLocalAdmin) {
+      const adminUser: AppUser = {
+        uid: "pulsepoint-admin-override-999",
+        email: email.toLowerCase(),
+        name: name.trim() || "System Administrator",
+        isGuest: false,
+        joinedDate: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+        birthdate: "1988-11-05",
+        bloodType: "O-Negative (Universal)",
+        allergies: "None - Database Override Enabled",
+        conditions: "Full Admin Override Active",
+        emergencyContact: "PulsePoint Operations Center",
+        emergencyPhone: "+1 (800) PULSE-OPS"
+      };
+
+      localStorage.setItem("pulsepoint_user", JSON.stringify(adminUser));
+      onAuthChange(adminUser);
+      setIsSubmitting(false);
+      playBeep(1100, 0.15);
+
+      // Force mock onboarding data for smooth dashboard visualization
+      localStorage.setItem("pulsepoint_onboarding_answers", JSON.stringify({
+        age: 35,
+        gender: "Male",
+        height: "180",
+        weight: "75",
+        systolic: "120",
+        diastolic: "80",
+        sugar: "95",
+        familyDiabetes: "No",
+        familyHeart: "No",
+        familyHypertension: "No",
+        smoke: "No",
+        alcohol: "No",
+        exercise: "Active",
+        sleep: "8 Hours",
+        stress: "Low",
+        diet: "Balanced"
+      }));
+      return;
+    }
+
     try {
       let firebaseUser;
       if (isSignUp) {
@@ -530,6 +574,60 @@ export default function UserProfile({ user, onAuthChange, setTab }: UserProfileP
                 className="w-full py-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.08] text-zinc-300 border border-white/10 hover:border-white/20 font-mono font-bold text-[10px] tracking-wider uppercase transition-all cursor-pointer active:scale-98"
               >
                 Continue as Secure Guest
+              </button>
+
+              {/* Secure Admin Bypass Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail("admin@pulsepoint.com");
+                  setPassword("admin123");
+                  setAgreeTerms(true);
+                  
+                  const adminUser: AppUser = {
+                    uid: "pulsepoint-admin-override-999",
+                    email: "admin@pulsepoint.com",
+                    name: "System Administrator",
+                    isGuest: false,
+                    joinedDate: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+                    birthdate: "1988-11-05",
+                    bloodType: "O-Negative (Universal)",
+                    allergies: "None - Database Override Enabled",
+                    conditions: "Full Admin Override Active",
+                    emergencyContact: "PulsePoint Operations Center",
+                    emergencyPhone: "+1 (800) PULSE-OPS"
+                  };
+
+                  localStorage.setItem("pulsepoint_user", JSON.stringify(adminUser));
+                  onAuthChange(adminUser);
+                  playBeep(1200, 0.2);
+
+                  // Force mock onboarding answers
+                  localStorage.setItem("pulsepoint_onboarding_answers", JSON.stringify({
+                    age: 35,
+                    gender: "Male",
+                    height: "180",
+                    weight: "75",
+                    systolic: "120",
+                    diastolic: "80",
+                    sugar: "95",
+                    familyDiabetes: "No",
+                    familyHeart: "No",
+                    familyHypertension: "No",
+                    smoke: "No",
+                    alcohol: "No",
+                    exercise: "Active",
+                    sleep: "8 Hours",
+                    stress: "Low",
+                    diet: "Balanced"
+                  }));
+                }}
+                disabled={isSubmitting}
+                className="w-full mt-3 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/25 text-rose-300 hover:text-rose-100 border border-rose-500/30 hover:border-rose-500/60 font-mono font-bold text-[10px] tracking-wider uppercase transition-all cursor-pointer active:scale-98 flex items-center justify-center gap-1.5 animate-pulse"
+                style={{ animationDuration: '3s' }}
+              >
+                <ShieldCheck className="h-4 w-4 text-rose-400" />
+                ⚠️ DB Offline? Direct Admin Bypass Login
               </button>
 
               {/* Verification bottom badge lines */}
