@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Search, MapPin, Navigation, Compass, Globe, Info, Tag, Phone, AlertCircle, RefreshCw } from "lucide-react";
 import { HospitalResult } from "../types";
+import { clientSideLocateHospitals } from "../utils/locatorFallback";
 
 export default function HospitalLocator() {
   const [query, setQuery] = useState("");
@@ -50,6 +51,7 @@ export default function HospitalLocator() {
     const lat = customLat || location.lat;
     const lng = customLng || location.lng;
 
+    let data;
     try {
       const res = await fetch("/api/locate-hospitals", {
         method: "POST",
@@ -60,8 +62,16 @@ export default function HospitalLocator() {
           query: targetQuery,
         }),
       });
-      const data = await res.json();
+      if (!res.ok) {
+        throw new Error("Express API returned non-OK status. Activating client fallback.");
+      }
+      data = await res.json();
+    } catch (e) {
+      console.warn("Local API endpoint failed or timed out. routing through clientSideLocateHospitals:", e);
+      data = await clientSideLocateHospitals(lat, lng, targetQuery);
+    }
 
+    try {
       setClinicalText(data.reply);
       setQuotaExceeded(!!data.quotaExceededFallback);
 
@@ -90,7 +100,7 @@ export default function HospitalLocator() {
         setSelectedHospital(null);
       }
     } catch (e) {
-      console.error(e);
+      console.error("Error parsing maps coordinates:", e);
     } finally {
       setLoading(false);
     }

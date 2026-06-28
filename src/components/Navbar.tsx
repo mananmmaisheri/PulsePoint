@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { HeartPulse, Menu, X, Sparkles, LayoutDashboard, Home, Bot, User } from "lucide-react";
+import { HeartPulse, Menu, X, Sparkles, LayoutDashboard, Home, Bot, User, Gift, Zap } from "lucide-react";
 
 interface NavbarProps {
   currentTab: string;
   setTab: (tab: string) => void;
-  user: { name: string; isGuest: boolean } | null;
+  user: any;
+  onOpenPricing?: () => void;
 }
 
-export default function Navbar({ currentTab, setTab, user }: NavbarProps) {
+export default function Navbar({ currentTab, setTab, user, onOpenPricing }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleTabSelect = (tab: string) => {
@@ -91,6 +92,30 @@ export default function Navbar({ currentTab, setTab, user }: NavbarProps) {
 
         {/* Right Side Tools & Controls: Show mobile hamburger or launch CTA on desktop */}
         <div className="flex items-center gap-2.5">
+          {/* Plus Subscription Status / Upgrade CTA */}
+          {user && (
+            <button
+              onClick={() => onOpenPricing?.()}
+              className={`hidden sm:inline-flex items-center justify-center text-center gap-1.5 text-xs font-bold h-9 px-4 rounded-full transition-all cursor-pointer shadow-lg active:scale-95 ${
+                user.plan === "plus"
+                  ? "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-yellow-300 border border-yellow-500/40 hover:border-yellow-500 hover:shadow-yellow-500/10 animate-bounce"
+                  : "bg-gradient-to-r from-violet-600/30 to-rose-500/30 text-rose-300 border border-rose-500/40 hover:border-rose-500 hover:shadow-rose-500/10"
+              }`}
+            >
+              {user.plan === "plus" ? (
+                <>
+                  <Gift className="h-3.5 w-3.5 text-yellow-400 animate-pulse" />
+                  <span>Surprise Coupons ✨</span>
+                </>
+              ) : (
+                <>
+                  <Zap className="h-3.5 w-3.5 text-rose-400" />
+                  <span>Upgrade to Plus</span>
+                </>
+              )}
+            </button>
+          )}
+
           {/* Launch CTA on desktop, hidden or condensed on small screens */}
           <button
             onClick={() => handleTabSelect(currentTab === "home" ? "pulsepoint" : "home")}
@@ -194,6 +219,33 @@ export default function Navbar({ currentTab, setTab, user }: NavbarProps) {
               </span>
             )}
           </button>
+
+          {/* Mobile Subscription Status / Upgrade CTA */}
+          {user && (
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onOpenPricing?.();
+              }}
+              className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl text-xs font-bold border transition-all ${
+                user.plan === "plus"
+                  ? "bg-amber-500/10 border-yellow-500/40 text-yellow-300"
+                  : "bg-rose-500/10 border-rose-500/40 text-rose-300"
+              }`}
+            >
+              {user.plan === "plus" ? (
+                <>
+                  <Gift className="h-4 w-4 text-yellow-400" />
+                  <span>Surprise Coupons ✨</span>
+                </>
+              ) : (
+                <>
+                  <Zap className="h-4 w-4 text-rose-400" />
+                  <span>Upgrade to Plus Plan</span>
+                </>
+              )}
+            </button>
+          )}
 
           {/* Mobile dedicated extra launch trigger */}
           <div className="pt-2.5 border-t border-white/5">

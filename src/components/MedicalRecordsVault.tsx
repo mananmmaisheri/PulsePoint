@@ -102,32 +102,26 @@ export default function MedicalRecordsVault() {
   const handleFileUpload = async (file: File) => {
     if (!file) return;
 
+    const isPlus = user?.plan === "plus";
+    if (!isPlus && records.length >= 6) {
+      alert("Document limit reached. Free plan is limited to 6 documents. Upgrade to PulsePoint Plus for unlimited document storage!");
+      window.dispatchEvent(new CustomEvent("open-pricing-modal"));
+      return;
+    }
+
     setOcrLoading(true);
     setOcrResult("");
 
     const reader = new FileReader();
     reader.onloadend = async () => {
-      const base64Content = (reader.result as string).split(",")[1];
       try {
-        const res = await fetch("/api/analyze-report", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fileData: base64Content,
-            mimeType: file.type,
-            reportText: `Scan of file name: ${file.name}`,
-          }),
-        });
-        const data = await res.json();
-        const apiSummary = data.summary || "Failed to analyze document";
-
         const newRec: MedicalRecord = {
           id: `rec-${Date.now()}`,
           category: file.type.includes("pdf") ? "Lab Report" : "Prescription",
           fileName: file.name,
           fileType: file.type,
           dateAdded: new Date().toISOString().split("T")[0],
-          summary: apiSummary,
+          summary: "Document securely archived in personal clinical health vault.",
           fileData: reader.result as string,
         };
 
@@ -149,16 +143,16 @@ export default function MedicalRecordsVault() {
         }
 
         setRecords((prev) => [newRec, ...prev]);
-        setOcrResult(apiSummary);
+        setOcrResult("Successfully archived document.");
         // Toast notifications
         if (Notification.permission === "granted") {
           new Notification("AI Records Vault Updated", {
-            body: `Successfully processed and categorized "${file.name}"`,
+            body: `Successfully archived "${file.name}"`,
           });
         }
       } catch (err) {
-        console.error("OCR parse fail:", err);
-        setOcrResult("❌ Failed to parse this medical report scan. Please check your Gemini key configurations.");
+        console.error("Archive fail:", err);
+        setOcrResult("❌ Failed to archive this medical report.");
       } finally {
         setOcrLoading(false);
       }
@@ -192,6 +186,13 @@ export default function MedicalRecordsVault() {
 
   // Click on a sample clinical report to learn summaries instantly
   const loadSampleReport = async (type: "cardio" | "blood") => {
+    const isPlus = user?.plan === "plus";
+    if (!isPlus && records.length >= 6) {
+      alert("Document limit reached. Free plan is limited to 6 documents. Upgrade to PulsePoint Plus for unlimited document storage!");
+      window.dispatchEvent(new CustomEvent("open-pricing-modal"));
+      return;
+    }
+
     setOcrLoading(true);
     setOcrResult("");
 
@@ -201,21 +202,13 @@ export default function MedicalRecordsVault() {
         : "Patient: Alex Carter. Complete Blood Count: Hemoglobin: 15.2 g/dL (Normal: 13-17). Platelets: 230 x10^3/uL. Red Blood Cells: 5.1 mil. ALT (Liver): 48 U/L (mildly elevated relative to 40 U/L base limit). Creatinine: 1.02 mg/dL. Recommends hydration cycle boost.";
 
     try {
-      const res = await fetch("/api/analyze-report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reportText: mockReportText }),
-      });
-      const data = await res.json();
-      const apiSummary = data.summary || "Sample parsed output failed.";
-
       const newRec: MedicalRecord = {
         id: `rec-${Date.now()}`,
         category: type === "cardio" ? "General Note" : "Lab Report",
         fileName: type === "cardio" ? "ECG_Heart_Scan_Analysis.txt" : "Serum_Heme_Panel.csv",
         fileType: "text/plain",
         dateAdded: new Date().toISOString().split("T")[0],
-        summary: apiSummary,
+        summary: "Document securely archived in personal clinical health vault.",
         fileData: `ORIGINAL EVALUATION SAMPLE REPORT:\n----------------------------------------\nDocument Ref: ${type === "cardio" ? "CARDIOLOGY-ECG-REF" : "HEMATOLOGY-CBC-REF"}\nDate Generated: ${new Date().toISOString().split("T")[0]}\n\nRAW PARSED TEXT CONTENT FROM SCAN:\n\n${mockReportText}`
       };
 
@@ -237,10 +230,10 @@ export default function MedicalRecordsVault() {
       }
 
       setRecords((prev) => [newRec, ...prev]);
-      setOcrResult(apiSummary);
+      setOcrResult("Successfully archived document.");
     } catch (e) {
       console.error(e);
-      setOcrResult("❌ Sample report call failed.");
+      setOcrResult("❌ Sample report save failed.");
     } finally {
       setOcrLoading(false);
     }
@@ -492,80 +485,50 @@ export default function MedicalRecordsVault() {
               </button>
             </div>
 
-            {/* Modal Navigation Tabs */}
-            <div className="flex border-b border-white/5 bg-white/[0.02] px-6 gap-6">
-              <button
-                onClick={() => setModalTab("summary")}
-                className={`py-3 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
-                  modalTab === "summary"
-                    ? "border-indigo-500 text-white"
-                    : "border-transparent text-zinc-400 hover:text-white"
-                }`}
-              >
-                📝 AI Summary Translation
-              </button>
-              <button
-                onClick={() => setModalTab("original")}
-                className={`py-3 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
-                  modalTab === "original"
-                    ? "border-indigo-500 text-white"
-                    : "border-transparent text-zinc-400 hover:text-white"
-                }`}
-              >
-                📂 Original Document Raw View
-              </button>
-            </div>
-
-            {/* Tab Contents */}
+            {/* Direct Document Raw View */}
             <div className="max-h-[380px] overflow-y-auto">
-              {modalTab === "summary" ? (
-                <div className="p-6 text-xs leading-relaxed whitespace-pre-wrap text-zinc-300 font-sans text-left">
-                  {selectedRecord.summary}
-                </div>
-              ) : (
-                <div className="p-6 text-xs leading-relaxed text-zinc-300">
-                  {selectedRecord.fileData ? (
-                    selectedRecord.fileData.startsWith("data:image/") ||
-                    /\.(png|jpe?g|gif|webp)$/i.test(selectedRecord.fileName) ||
-                    (selectedRecord.fileType && selectedRecord.fileType.startsWith("image/")) ? (
-                      <div className="text-center space-y-4 py-2">
-                        <img
-                          src={selectedRecord.fileData}
-                          className="max-h-[300px] object-contain mx-auto border border-white/10 rounded-xl shadow-xl"
-                          alt={selectedRecord.fileName}
-                          referrerPolicy="no-referrer"
-                        />
-                        <div className="inline-block bg-white/[0.02] border border-white/5 text-[10px] font-mono text-zinc-500 px-3 py-1 rounded-lg">
-                          Original Diagnostic Image Scan Secured
-                        </div>
+              <div className="p-6 text-xs leading-relaxed text-zinc-300">
+                {selectedRecord.fileData ? (
+                  selectedRecord.fileData.startsWith("data:image/") ||
+                  /\.(png|jpe?g|gif|webp)$/i.test(selectedRecord.fileName) ||
+                  (selectedRecord.fileType && selectedRecord.fileType.startsWith("image/")) ? (
+                    <div className="text-center space-y-4 py-2">
+                      <img
+                        src={selectedRecord.fileData}
+                        className="max-h-[300px] object-contain mx-auto border border-white/10 rounded-xl shadow-xl"
+                        alt={selectedRecord.fileName}
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="inline-block bg-white/[0.02] border border-white/5 text-[10px] font-mono text-zinc-500 px-3 py-1 rounded-lg">
+                        Original Diagnostic Image Scan Secured
                       </div>
-                    ) : (
-                      <div className="space-y-4 text-left">
-                        <div className="p-4 bg-black/45 border border-white/5 rounded-xl font-mono text-[11px] leading-relaxed whitespace-pre-wrap text-zinc-300">
-                          {selectedRecord.fileData}
-                        </div>
-                        <div className="text-center">
-                          <a
-                            href={selectedRecord.fileData}
-                            download={selectedRecord.fileName}
-                            className="inline-flex items-center gap-2 text-xs bg-indigo-650 hover:bg-indigo-600 border border-indigo-500/20 text-white px-4 py-2.5 rounded-xl font-bold transition-all cursor-pointer shadow-lg active:scale-95 text-center"
-                          >
-                            📥 Download Original Report File
-                          </a>
-                        </div>
-                      </div>
-                    )
-                  ) : (
-                    <div className="text-center py-10 space-y-3">
-                      <FileText className="h-10 w-10 text-white/10 mx-auto" />
-                      <p className="text-sm font-bold text-white">No raw source file data found</p>
-                      <p className="text-xs text-zinc-500 max-w-sm mx-auto text-center">
-                        This reference was generated clinically or imported prior to client encryption protocols. Secure original attachments on future uploads.
-                      </p>
                     </div>
-                  )}
-                </div>
-              )}
+                  ) : (
+                    <div className="space-y-4 text-left">
+                      <div className="p-4 bg-black/45 border border-white/5 rounded-xl font-mono text-[11px] leading-relaxed whitespace-pre-wrap text-zinc-300">
+                        {selectedRecord.fileData}
+                      </div>
+                      <div className="text-center">
+                        <a
+                          href={selectedRecord.fileData}
+                          download={selectedRecord.fileName}
+                          className="inline-flex items-center gap-2 text-xs bg-indigo-650 hover:bg-indigo-600 border border-indigo-500/20 text-white px-4 py-2.5 rounded-xl font-bold transition-all cursor-pointer shadow-lg active:scale-95 text-center"
+                        >
+                          📥 Download Original Report File
+                        </a>
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  <div className="text-center py-10 space-y-3">
+                    <FileText className="h-10 w-10 text-white/10 mx-auto" />
+                    <p className="text-sm font-bold text-white">No raw source file data found</p>
+                    <p className="text-xs text-zinc-500 max-w-sm mx-auto text-center">
+                      This reference was generated clinically or imported prior to client encryption protocols. Secure original attachments on future uploads.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="p-4 border-t border-white/5 bg-gray-950 flex items-center gap-2 text-[10px] text-zinc-500 text-left">

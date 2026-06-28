@@ -12,6 +12,8 @@ import FeaturesHub from "./components/FeaturesHub";
 import HomepageScrollSections from "./components/HomepageScrollSections";
 import Footer from "./components/Footer";
 import UserProfile from "./components/UserProfile";
+import LoginGateway from "./components/LoginGateway";
+import PricingModal from "./components/PricingModal";
 
 export interface AppUser {
   uid?: string;
@@ -26,48 +28,35 @@ export interface AppUser {
   avatarUrl?: string;
   emergencyContact?: string;
   emergencyPhone?: string;
+  plan?: "free" | "plus";
+  aiCredits?: number;
 }
-
-const DEFAULT_USER: AppUser = {
-  uid: "pulsepoint-local-user-id",
-  email: "clinician@pulsepoint.ai",
-  name: "Dr. Jordan Henderson",
-  isGuest: false,
-  joinedDate: "June 2026",
-  birthdate: "1994-08-15",
-  bloodType: "A-Positive",
-  allergies: "No declared allergies",
-  conditions: "Healthy Baseline",
-  emergencyContact: "Emergency Dispatch",
-  emergencyPhone: "911"
-};
 
 export default function App() {
   // Authentication states
-  const [user, setUser] = useState<AppUser>(() => {
+  const [user, setUser] = useState<AppUser | null>(() => {
     const saved = localStorage.getItem("pulsepoint_user");
     if (saved) {
       try {
         return JSON.parse(saved);
       } catch (e) {
-        // Fallback to default
+        return null;
       }
     }
-    // Set default user in local storage so other components find it instantly
-    localStorage.setItem("pulsepoint_user", JSON.stringify(DEFAULT_USER));
-    return DEFAULT_USER;
+    return null;
   });
-
-  // Ensure user is synchronized on load
-  useEffect(() => {
-    const saved = localStorage.getItem("pulsepoint_user");
-    if (!saved) {
-      localStorage.setItem("pulsepoint_user", JSON.stringify(DEFAULT_USER));
-    }
-  }, []);
 
   // Navigation tabs routing state: "home" | "pulsepoint" | "features" | "profile"
   const [currentTab, setTabState] = useState<string>("home");
+  const [isPricingOpen, setIsPricingOpen] = useState(false);
+
+  const handlePlanUpgrade = () => {
+    if (user) {
+      const updatedUser = { ...user, plan: "plus" as const, aiCredits: 999999 };
+      setUser(updatedUser);
+      localStorage.setItem("pulsepoint_user", JSON.stringify(updatedUser));
+    }
+  };
 
   // Wrapping setTab with startTransition to handle routing transitions fluidly
   const setTab = (tab: string) => {
@@ -75,6 +64,41 @@ export default function App() {
       setTabState(tab);
     });
   };
+
+  useEffect(() => {
+    const handleOpenPricing = () => setIsPricingOpen(true);
+    const handleUserUpdate = (e: any) => {
+      if (e.detail) {
+        setUser(e.detail);
+      } else {
+        const saved = localStorage.getItem("pulsepoint_user");
+        if (saved) {
+          try {
+            setUser(JSON.parse(saved));
+          } catch (err) {}
+        }
+      }
+    };
+    
+    window.addEventListener("open-pricing-modal", handleOpenPricing);
+    window.addEventListener("user-credits-updated", handleUserUpdate);
+    window.addEventListener("pulsepoint-user-updated", handleUserUpdate);
+    
+    return () => {
+      window.removeEventListener("open-pricing-modal", handleOpenPricing);
+      window.removeEventListener("user-credits-updated", handleUserUpdate);
+      window.removeEventListener("pulsepoint-user-updated", handleUserUpdate);
+    };
+  }, []);
+
+  if (!user) {
+    return (
+      <div className="relative min-h-screen bg-background font-sans text-foreground selection:bg-rose-500/30 overflow-x-hidden p-0 m-0">
+        <CustomCursor />
+        <LoginGateway onAuthChange={setUser} />
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-background font-sans text-foreground selection:bg-rose-500/30 overflow-x-hidden p-0 m-0">
@@ -102,7 +126,7 @@ export default function App() {
           {/* Section 1: Top Hero Landing Section (h-screen viewport containment) */}
           <div className="relative min-h-screen flex flex-col overflow-hidden shrink-0 z-10">
             {/* Top Navbar */}
-            <Navbar currentTab={currentTab} setTab={setTab} user={user} />
+            <Navbar currentTab={currentTab} setTab={setTab} user={user} onOpenPricing={() => setIsPricingOpen(true)} />
 
             {/* Vertically Centered Hero elements above video - relative z-10 block */}
             <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 max-w-7xl mx-auto w-full">
@@ -170,7 +194,7 @@ export default function App() {
           <BackgroundVideo url="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260328_065045_c44942da-53c6-4804-b734-f9e07fc22e08.mp4" />
 
           {/* Navbar wrapper */}
-          <Navbar currentTab={currentTab} setTab={setTab} user={user} />
+          <Navbar currentTab={currentTab} setTab={setTab} user={user} onOpenPricing={() => setIsPricingOpen(true)} />
 
           {/* Chat Assistant embedded inside beautiful transparent frosted layout card */}
           <div className="relative z-10 flex-1 flex flex-col justify-center py-2 md:py-3 px-2 md:px-6 max-w-7xl mx-auto w-full h-[calc(100vh-100px)] md:h-[calc(100vh-112px)] overflow-hidden">
@@ -202,7 +226,7 @@ export default function App() {
           <BackgroundVideo url="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260328_065045_c44942da-53c6-4804-b734-f9e07fc22e08.mp4" />
 
           {/* Master Dashboard Navbar */}
-          <Navbar currentTab={currentTab} setTab={setTab} user={user} />
+          <Navbar currentTab={currentTab} setTab={setTab} user={user} onOpenPricing={() => setIsPricingOpen(true)} />
 
           {/* Primary View content mounting the catalog layout of medical modules */}
           <div className="relative z-20 flex-1 flex flex-col">
@@ -234,7 +258,7 @@ export default function App() {
 
           <BackgroundVideo url="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260328_065045_c44942da-53c6-4804-b734-f9e07fc22e08.mp4" />
 
-          <Navbar currentTab={currentTab} setTab={setTab} user={user} />
+          <Navbar currentTab={currentTab} setTab={setTab} user={user} onOpenPricing={() => setIsPricingOpen(true)} />
 
           <div className="relative z-10 flex-1 flex flex-col">
             <UserProfile user={user} onAuthChange={setUser} setTab={setTab} />
@@ -243,6 +267,14 @@ export default function App() {
           <Footer setTab={setTab} />
         </div>
       )}
+
+      {/* 5. Dynamic Pricing Plan Modal Upgrade */}
+      <PricingModal 
+        isOpen={isPricingOpen} 
+        onClose={() => setIsPricingOpen(false)} 
+        user={user} 
+        onPlanUpgrade={handlePlanUpgrade} 
+      />
     </div>
   );
 }

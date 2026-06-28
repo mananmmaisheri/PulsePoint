@@ -104,6 +104,38 @@ export default function AISmartAssistant({ user }: AISmartAssistantProps) {
   const [loading, setLoading] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(true);
   const [chatQuotaExceeded, setChatQuotaExceeded] = useState(false);
+  
+  const [credits, setCredits] = useState<number>(() => {
+    const saved = localStorage.getItem("pulsepoint_user");
+    if (saved) {
+      try {
+        const u = JSON.parse(saved);
+        return u.aiCredits !== undefined ? u.aiCredits : 15;
+      } catch (e) {}
+    }
+    return 15;
+  });
+
+  useEffect(() => {
+    const handleSync = () => {
+      const saved = localStorage.getItem("pulsepoint_user");
+      if (saved) {
+        try {
+          const u = JSON.parse(saved);
+          if (u.aiCredits !== undefined) {
+            setCredits(u.aiCredits);
+          }
+        } catch (e) {}
+      }
+    };
+    window.addEventListener("user-credits-updated", handleSync);
+    window.addEventListener("pulsepoint-user-updated", handleSync);
+    return () => {
+      window.removeEventListener("user-credits-updated", handleSync);
+      window.removeEventListener("pulsepoint-user-updated", handleSync);
+    };
+  }, []);
+
   const [activeTab, setActiveTab2] = useState<"diet" | "remedies">("remedies");
   const [selectedDietKey, setSelectedDietKey] = useState<"veg" | "non_veg" | "vegan" | "keto">("veg");
   const [sosStatus, setSosStatus] = useState<"idle" | "triggered">("idle");
@@ -424,6 +456,26 @@ export default function AISmartAssistant({ user }: AISmartAssistantProps) {
     const text = (textToSend || input).trim();
     if (!text && !attachedFile) return;
 
+    const isPlus = user?.plan === "plus";
+    if (!isPlus && credits <= 0) {
+      setChatQuotaExceeded(true);
+      return;
+    }
+
+    if (!isPlus) {
+      const nextCredits = credits - 1;
+      setCredits(nextCredits);
+      const saved = localStorage.getItem("pulsepoint_user");
+      if (saved) {
+        try {
+          const u = JSON.parse(saved);
+          u.aiCredits = nextCredits;
+          localStorage.setItem("pulsepoint_user", JSON.stringify(u));
+          window.dispatchEvent(new CustomEvent("user-credits-updated", { detail: u }));
+        } catch (e) {}
+      }
+    }
+
     if (!textToSend) setInput("");
 
     // ONLY trigger immediate client-side SOS on direct explicit SOS commands (like "sos", "emergency button", etc.).
@@ -678,18 +730,24 @@ export default function AISmartAssistant({ user }: AISmartAssistantProps) {
       </div>
 
       {chatQuotaExceeded && (
-        <div className="p-3.5 px-5 bg-amber-950/20 border border-amber-500/30 rounded-2xl flex items-center justify-between gap-4 text-xs text-amber-300 transition-all animate-fade-in" id="chat-quota-warning">
+        <div className="p-4 bg-rose-950/20 border border-rose-500/30 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-rose-300 transition-all animate-fade-in" id="chat-quota-warning">
           <div className="flex items-center gap-2.5 text-left">
-            <AlertTriangle className="h-4.5 w-4.5 text-amber-400 shrink-0" />
-            <span className="text-zinc-300 leading-normal">
-              <strong>Clinical Offline Model Engaged:</strong> Planetary AI limit coordinates exceeded. Instant sandboxed clinical fallback is active to safeguard all physical triage, Indian home remedies, and care guides without delay.
-            </span>
+            <AlertTriangle className="h-4.5 w-4.5 text-rose-400 shrink-0 mt-0.5 animate-pulse" />
+            <div className="space-y-0.5">
+              <p className="font-bold text-white">AI Credits Exhausted (0 Credits remaining)</p>
+              <p className="text-zinc-400 leading-normal text-[11px]">
+                You have reached the Free Plan limit of 15 messages. Upgrade to PulsePoint Plus to continue consulting the clinical model with unlimited chats, personalized health plans, and unlimited vault storage!
+              </p>
+            </div>
           </div>
           <button 
-            onClick={() => setChatQuotaExceeded(false)}
-            className="text-[10px] font-mono hover:text-white bg-amber-900/30 hover:bg-amber-800/50 px-2.5 py-1 rounded-lg border border-amber-500/30 shrink-0 cursor-pointer"
+            onClick={() => {
+              setChatQuotaExceeded(false);
+              window.dispatchEvent(new CustomEvent("open-pricing-modal"));
+            }}
+            className="text-xs font-bold text-black bg-gradient-to-r from-amber-400 to-yellow-500 hover:brightness-110 px-4 py-2 rounded-xl shrink-0 cursor-pointer shadow-lg active:scale-95 border-none outline-none"
           >
-            Dismiss
+            Upgrade Now ✨
           </button>
         </div>
       )}
@@ -776,7 +834,7 @@ export default function AISmartAssistant({ user }: AISmartAssistantProps) {
                  Hello, <span className="bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400 bg-clip-text text-transparent font-bold">{user ? user.name : "User"}</span>
                </h2>
                <h3 className="text-xs md:text-sm font-sans font-medium text-zinc-400 leading-normal max-w-lg mx-auto">
-                 How can PulsePoint assist your wellness journey today?
+                 How can PulsePoint assist your wellness journey today?</h3><div className="pt-2 flex justify-center"><div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-white/[0.03] border border-white/5"><span className="text-zinc-500">Plan:</span><span className={user?.plan === "plus" ? "text-yellow-400 font-extrabold" : "text-violet-400"}>{user?.plan === "plus" ? "PulsePoint Plus 👑" : "Free Plan"}</span><span className="text-zinc-700">|</span><span className="text-zinc-500">AI Credits:</span><span className={user?.plan === "plus" ? "text-emerald-400 font-extrabold animate-pulse" : credits > 0 ? "text-pink-400" : "text-rose-500"}>{user?.plan === "plus" ? "Unlimited" : `${credits} / 15`}</span></div></div><h3 style={{ display: 'none' }} className="hidden">
                </h3>
              </div>
 
