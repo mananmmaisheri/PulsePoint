@@ -187,7 +187,7 @@ export default function HospitalLocator() {
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && triggerLocationSearch()}
               placeholder="Cardiology, Dentist, Eye clinic, Pediatric..."
-              className="w-full bg-black/40 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-xs focus:outline-none focus:border-violet-500/40 text-white transition-all"
+              className="w-full bg-black/40 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-base md:text-xs focus:outline-none focus:border-violet-500/40 text-white transition-all"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-mono bg-white/[0.05] text-zinc-400 px-1.5 py-0.5 rounded">Specialty</span>
           </div>
@@ -201,7 +201,7 @@ export default function HospitalLocator() {
               onChange={(e) => setSearchTextLocation(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && triggerLocationSearch()}
               placeholder="Search custom city/address (e.g. Mumbai, Noida)"
-              className="w-full bg-black/40 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-xs focus:outline-none focus:border-emerald-500/40 text-white transition-all placeholder:text-zinc-500"
+              className="w-full bg-black/40 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-base md:text-xs focus:outline-none focus:border-emerald-500/40 text-white transition-all placeholder:text-zinc-500"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-mono bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded">Location</span>
           </div>
@@ -214,7 +214,7 @@ export default function HospitalLocator() {
                 setCategory(e.target.value);
                 handleSearch(e.target.value);
               }}
-              className="w-full bg-black/40 border border-white/10 text-white text-xs rounded-xl px-3 py-3 outline-none focus:border-violet-500 hover:bg-white/[0.08] transition-colors cursor-pointer"
+              className="w-full bg-black/40 border border-white/10 text-white text-base md:text-xs rounded-xl px-3 py-3 outline-none focus:border-violet-500 hover:bg-white/[0.08] transition-colors cursor-pointer"
             >
               {categories.map((c) => (
                 <option key={c.value} value={c.value} className="bg-gray-950 text-white">

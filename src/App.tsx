@@ -62,6 +62,7 @@ export default function App() {
   const setTab = (tab: string) => {
     startTransition(() => {
       setTabState(tab);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
   };
 
@@ -152,8 +153,11 @@ export default function App() {
                 </h1>
 
                 {/* Subtitle - verbatim specifications slightly paired into clinical values */}
-                <p className="text-[#d1d0ce] text-base md:text-lg leading-relaxed max-w-lg mt-6 opacity-80 tracking-wide font-sans text-center px-4">
-                  The most powerful AI ever deployed in healthcare and emergency response intelligence.
+                <p className="text-[#d1d0ce] text-base md:text-lg leading-relaxed max-w-xl mt-6 opacity-80 tracking-wide font-sans text-center px-4">
+                  Your Personal AI Health Companion.
+                  <span className="block text-sm md:text-base text-zinc-400 mt-2 font-light">
+                    The most powerful AI ever deployed in healthcare and emergency response intelligence.
+                  </span>
                 </p>
 
                 {/* CTA button: "Schedule a Consult" - leads immediately to the specialized AI assistant */}

@@ -17,6 +17,12 @@ export default function BackgroundVideo({ url }: BackgroundVideoProps) {
     const tick = () => {
       if (!video) return;
       
+      // Battery/performance optimization: halt frame ticks when tab is inactive
+      if (document.hidden) {
+        animId = requestAnimationFrame(tick);
+        return;
+      }
+      
       const duration = video.duration;
       const current = video.currentTime;
 

@@ -166,7 +166,7 @@ export default function PricingModal({ isOpen, onClose, user, onPlanUpgrade }: P
                   <div>
                     <h4 className="text-xs font-mono font-bold text-rose-300 uppercase tracking-widest">Plus Plan</h4>
                     <div className="mt-2 mb-3">
-                      <span className="text-2xl font-bold text-white">₹499</span>
+                      <span className="text-2xl font-bold text-white">₹199</span>
                       <span className="text-xs text-zinc-400"> / month</span>
                     </div>
                     <ul className="space-y-2 text-xs text-zinc-200">

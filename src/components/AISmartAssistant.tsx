@@ -1159,7 +1159,7 @@ export default function AISmartAssistant({ user }: AISmartAssistantProps) {
                       >
                         <div className="flex flex-wrap gap-1 bg-[#050212] p-1 rounded-xl border border-white/5 font-sans justify-start w-max">
                           {[
-                            { key: "veg", label: "Vegan-Veg" },
+                            { key: "veg", label: "Veg" },
                             { key: "non_veg", label: "Non-Veg" },
                             { key: "vegan", label: "Vegan" },
                             { key: "keto", label: "Keto Plan" }
